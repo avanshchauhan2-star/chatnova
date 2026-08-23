@@ -1,0 +1,1857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>ChatNova</title>
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#FF7A59">
+<link rel="icon" href="./icon-192.png">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;1,500&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  body{margin:0; background:#0d0d10; color:#fff; font-family:'Manrope',sans-serif; padding:18px 0 40px;}
+  button{font-family:inherit;}
+
+  .stage{max-width:420px; margin:0 auto; padding:0 16px;}
+  .frame{border-radius:34px; overflow:hidden; position:relative; box-shadow:0 20px 60px rgba(0,0,0,0.5);}
+  .hidden{display:none !important;}
+
+  .stars{position:absolute; inset:0; z-index:0; pointer-events:none;}
+  .stars i{position:absolute; width:2px; height:2px; background:#fff; border-radius:50%; opacity:.5; animation:twinkle 3.2s ease-in-out infinite;}
+  @keyframes twinkle{0%,100%{opacity:.15;} 50%{opacity:.85;}}
+  @media (prefers-reduced-motion:reduce){.stars i{animation:none; opacity:.4;}}
+
+  /* ===================== AUTH ===================== */
+  .auth{background:#120A18; min-height:620px; position:relative; padding:38px 26px 30px;}
+  .auth-content{position:relative; z-index:1;}
+  .constel{width:150px; height:44px; margin-bottom:14px;}
+  .logo{font-family:'Fraunces',serif; font-style:italic; font-weight:600; font-size:29px; margin:0; letter-spacing:-0.3px;}
+  .logo b{font-style:normal; background:linear-gradient(90deg,#FF7A59,#FFC65C); -webkit-background-clip:text; background-clip:text; color:transparent;}
+  .tag{font-family:'JetBrains Mono',monospace; font-size:11px; color:#8c7a95; margin:6px 0 26px; letter-spacing:0.2px;}
+
+  .tabs{display:flex; background:#1C1220; border-radius:11px; padding:4px; margin-bottom:24px;}
+  .tabbtn{flex:1; text-align:center; padding:10px; font-size:13.5px; font-weight:700; color:#8c7a95; cursor:pointer; border-radius:8px; border:none; background:transparent;}
+  .tabbtn.active{background:#2C1B33; color:#fff;}
+
+  .field{margin-bottom:6px;}
+  .field label{display:block; font-family:'JetBrains Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:0.8px; color:#8c7a95; margin-bottom:7px;}
+  .field input{width:100%; background:#251733; border:1.5px solid #3E2B4B; border-radius:12px; padding:13px; color:#fff; font-size:14.5px; font-family:'Manrope',sans-serif;}
+  .field input::placeholder{color:#8A7C93;}
+  .field input:focus{outline:none; border-color:#FF9F6B; background:#2C1C3B;}
+  .field input.error{border-color:#FF5C6A;}
+  .field-error-msg{font-size:11px; color:#FF8A94; margin:6px 0 0; min-height:14px;}
+  .field-spacer{margin-bottom:15px;}
+  @keyframes shake{10%,90%{transform:translateX(-1px);}20%,80%{transform:translateX(2px);}30%,50%,70%{transform:translateX(-3px);}40%,60%{transform:translateX(3px);}}
+  .shake{animation:shake .32s;}
+
+  .hint{font-size:11.5px; color:#6f6178; margin-top:6px; line-height:1.4;}
+  .pw-wrap{position:relative;}
+  .pw-wrap input{padding-right:42px !important;}
+  .pw-toggle{position:absolute; right:6px; top:50%; transform:translateY(-50%); background:none; border:none; font-size:16px; padding:8px; cursor:pointer; line-height:1;}
+  .privacy-cards{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:2px;}
+  .privacy-card{background:#1A1020; border:1.5px solid #2E2136; border-radius:14px; padding:14px 12px; text-align:left; cursor:pointer; display:flex; flex-direction:column; gap:5px;}
+  .privacy-card.active{border-color:#FFC65C; background:#241A16;}
+  .pc-icon{font-size:19px;}
+  .pc-title{font-size:13.5px; font-weight:800; color:#fff;}
+  .pc-desc{font-size:10.5px; color:#8c7a95; line-height:1.35;}
+
+  .primary-btn{width:100%; border:none; border-radius:12px; padding:14px; font-size:14.5px; font-weight:800; cursor:pointer; margin-top:8px; color:#1a0f10; background:linear-gradient(90deg,#FF7A59,#FFC65C);}
+  .primary-btn:active{filter:brightness(0.92);}
+  .linkrow{text-align:center; font-size:13px; color:#8c7a95; margin-top:16px;}
+  .linkrow a{background:linear-gradient(90deg,#FF7A59,#FFC65C); -webkit-background-clip:text; background-clip:text; color:transparent; text-decoration:none; font-weight:700; cursor:pointer;}
+  .foot{text-align:center; font-family:'JetBrains Mono',monospace; font-size:10px; color:#443A4B; margin-top:22px; letter-spacing:0.4px;}
+
+  /* ===================== CHATS / THREAD / REQUESTS (shared shell) ===================== */
+  .chats{background:#120A18; min-height:640px; position:relative; overflow:hidden; display:flex; flex-direction:column;}
+  .c-topbar{position:relative; z-index:1; display:flex; align-items:center; justify-content:space-between; padding:20px 18px 4px; gap:8px;}
+  .c-title{font-family:'Fraunces',serif; font-style:italic; font-weight:600; font-size:21px; margin:0;}
+  .c-avatar-me{width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg,#FF7A59,#FFC65C); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; color:#1a0f10; border:none; cursor:pointer; flex:none;}
+  .c-icon-btn{position:relative; width:34px; height:34px; border-radius:50%; background:#1E1424; display:flex; align-items:center; justify-content:center; color:#c9bdd0; font-size:15px; cursor:pointer; border:1px solid #2E2136; flex:none;}
+  .c-icon-btn:active, .c-avatar-me:active{filter:brightness(0.85);}
+  .c-icon-group{display:flex; gap:8px; align-items:center;}
+  .c-badge-dot{position:absolute; top:-4px; right:-4px; min-width:16px; height:16px; padding:0 4px; border-radius:9px; background:linear-gradient(90deg,#FF7A59,#FFC65C); color:#1a0f10; font-size:9.5px; font-weight:800; display:flex; align-items:center; justify-content:center;}
+
+  .c-search-wrap{position:relative; z-index:1; padding:14px 20px 10px;}
+  .c-search{display:flex; align-items:center; gap:9px; background:#1E1424; border:1.5px solid #2E2136; border-radius:14px; padding:12px 14px;}
+  .c-search svg{flex:none; opacity:.55;}
+  .c-search input{border:none; background:transparent; outline:none; color:#fff; font-size:14px; flex:1; font-family:'Manrope',sans-serif; width:100%;}
+  .c-search input::placeholder{color:#8A7C93;}
+  .c-search-go{flex:none; border:none; background:linear-gradient(90deg,#FF7A59,#FFC65C); color:#1a0f10; font-size:12px; font-weight:800; border-radius:9px; padding:7px 11px; cursor:pointer;}
+
+  .c-list{position:relative; z-index:1; flex:1; overflow-y:auto; padding:2px 8px 90px;}
+  .c-row{display:flex; align-items:center; gap:12px; padding:12px; border-radius:14px; cursor:pointer; width:100%; background:none; border:none; text-align:left;}
+  .c-row:active{background:#1A1020;}
+  .c-avatar-wrap{position:relative; flex:none;}
+  .c-avatar{width:48px; height:48px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:16px; color:#fff;}
+  .c-mid{flex:1; min-width:0;}
+  .c-row-top{display:flex; justify-content:space-between; align-items:center; gap:8px;}
+  .c-name{font-size:14.5px; font-weight:700; color:#fff;}
+  .c-time{font-family:'JetBrains Mono',monospace; font-size:10.5px; color:#6f6178; flex:none;}
+  .c-preview{font-size:13px; color:#9a8ea3; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-top:3px;}
+
+  .empty-state{position:relative; z-index:1; flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:20px 40px 90px; gap:8px;}
+  .es-icon{font-size:34px; margin-bottom:4px;}
+  .es-title{font-size:15px; font-weight:800; color:#fff; margin:0;}
+  .es-sub{font-size:12.5px; color:#8c7a95; margin:0; line-height:1.5;}
+
+  .c-fab{position:absolute; z-index:2; right:20px; bottom:24px; width:56px; height:56px; border-radius:50%; background:linear-gradient(135deg,#FF7A59,#FFC65C); display:flex; align-items:center; justify-content:center; box-shadow:0 8px 20px rgba(255,122,89,0.4); cursor:pointer; border:none; padding:0;}
+  .c-fab:active{filter:brightness(0.9);}
+
+  /* thread */
+  .thread-messages{position:relative; z-index:1; flex:1; overflow-y:auto; padding:16px 0; display:flex; flex-direction:column;}
+  .thread-demo-note{margin:10px 24px; font-size:11.5px; color:#6f6178; text-align:center; line-height:1.5; background:#1A1020; border:1px solid #2E2136; border-radius:12px; padding:12px 14px;}
+  .msg-row{display:flex; margin:4px 20px; flex-direction:column;}
+  .msg-row.mine{align-items:flex-end;}
+  .msg-row:not(.mine){align-items:flex-start;}
+  .msg-bubble{max-width:75%; padding:10px 14px; border-radius:16px; font-size:13.5px; line-height:1.4; word-wrap:break-word;}
+  .msg-row.mine .msg-bubble{background:linear-gradient(90deg,#FF7A59,#FFC65C); color:#1a0f10; border-bottom-right-radius:5px;}
+  .msg-row:not(.mine) .msg-bubble{background:#1E1424; color:#fff; border:1px solid #2E2136; border-bottom-left-radius:5px;}
+  .msg-time{font-family:'JetBrains Mono',monospace; font-size:9.5px; color:#6f6178; margin:3px 4px 0;}
+  .typing-bubble{display:flex; gap:4px; padding:13px 16px;}
+  .typing-bubble .dot{width:6px; height:6px; border-radius:50%; background:#8A7C93; animation:typingBounce 1.2s infinite;}
+  .typing-bubble .dot:nth-child(2){animation-delay:.2s;}
+  .typing-bubble .dot:nth-child(3){animation-delay:.4s;}
+  @keyframes typingBounce{0%,60%,100%{transform:translateY(0); opacity:.4;} 30%{transform:translateY(-4px); opacity:1;}}
+  .thread-subtitle{font-size:10.5px; color:#6f6178; margin-top:1px;}
+  .thread-input-row{position:relative; z-index:1; display:flex; gap:10px; padding:12px 16px 18px; border-top:1px solid #1E1424; align-items:center;}
+  .thread-input-row input{flex:1; background:#1E1424; border:1.5px solid #2E2136; border-radius:20px; padding:11px 16px; color:#fff; font-size:14px; font-family:'Manrope',sans-serif;}
+  .thread-input-row input::placeholder{color:#8A7C93;}
+  .thread-input-row input:focus{outline:none; border-color:#FF9F6B;}
+  .thread-send{flex:none; width:42px; height:42px; border-radius:50%; border:none; background:linear-gradient(135deg,#FF7A59,#FFC65C); color:#1a0f10; display:flex; align-items:center; justify-content:center; cursor:pointer;}
+  .thread-send:active{filter:brightness(0.9);}
+
+  /* requests */
+  .req-block{display:flex; flex-direction:column; gap:0; padding:14px 20px 16px; border-bottom:1px solid #1E1424; position:relative; z-index:1;}
+  .req-row{display:flex; align-items:center; gap:12px;}
+  .req-mid{flex:1; min-width:0;}
+  .req-name{font-size:14px; font-weight:700; color:#fff;}
+  .req-msg{font-size:12.5px; color:#9a8ea3; margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .req-actions{display:flex; gap:8px; margin-top:10px;}
+  .req-accept{flex:1; border:none; border-radius:9px; padding:8px; font-size:12.5px; font-weight:800; color:#1a0f10; background:linear-gradient(90deg,#FF7A59,#FFC65C); cursor:pointer;}
+  .req-decline{flex:1; border:1.5px solid #3E2B4B; border-radius:9px; padding:8px; font-size:12.5px; font-weight:700; color:#c9bdd0; background:transparent; cursor:pointer;}
+  .demo-tool{position:relative; z-index:1; margin:8px 20px 0; text-align:center;}
+  .demo-tool button{background:none; border:1px dashed #3E2B4B; color:#6f6178; font-size:11px; padding:8px 12px; border-radius:10px; cursor:pointer;}
+
+  .toast{position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(20px); background:#1E1424; border:1px solid #3E2B4B; color:#fff; padding:11px 18px; border-radius:12px; font-size:13px; opacity:0; pointer-events:none; transition:all .25s ease; z-index:50; max-width:85vw; text-align:center;}
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+  /* confirm modal */
+  .modal-overlay{position:fixed; inset:0; background:rgba(6,3,10,0.72); display:flex; align-items:center; justify-content:center; z-index:200; padding:24px;}
+  .modal-box{background:#1A1020; border:1.5px solid #2E2136; border-radius:18px; padding:24px 22px; width:100%; max-width:320px; text-align:center;}
+  .modal-icon{font-size:28px; margin-bottom:10px;}
+  .modal-text{font-size:14.5px; color:#fff; line-height:1.5; margin:0 0 20px;}
+  .modal-actions{display:flex; gap:10px;}
+  .modal-actions button{flex:1; margin-top:0;}
+
+  /* smooth telegram-style message entrance */
+  @keyframes msgIn{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
+  .msg-row{animation: msgIn .24s ease-out;}
+
+  /* search page */
+  .search-clear-x{cursor:pointer; color:#8A7C93; font-size:16px; padding:2px 4px;}
+  .search-section-label{position:relative; z-index:1; font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:1px; text-transform:uppercase; color:#6f6178; padding:12px 20px 8px;}
+  .hist-chip{display:inline-flex; align-items:center; gap:6px; background:#1E1424; border:1px solid #2E2136; padding:8px 13px; border-radius:20px; margin:0 8px 8px 0; font-size:13px; cursor:pointer; color:#c9bdd0;}
+  .search-empty{position:relative; z-index:1; color:#6f6178; font-size:13px; text-align:center; padding:24px 30px;}
+  .search-row{display:flex; align-items:center; gap:12px; padding:12px; border-radius:14px; cursor:pointer; width:100%; background:none; border:none; text-align:left;}
+  .search-row:active{background:#1A1020;}
+
+  /* profile page */
+  .profile-body{position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; padding:36px 24px 20px;}
+  .profile-avatar-wrap{position:relative; width:104px; height:104px; margin-bottom:18px;}
+  .profile-avatar{width:104px; height:104px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:40px; font-weight:800; color:#fff; background:linear-gradient(135deg,#FF7A59,#FFC65C);}
+  .profile-photo-btn{position:absolute; right:0; bottom:2px; width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg,#FF7A59,#FFC65C); border:3px solid #120A18; display:flex; align-items:center; justify-content:center; cursor:pointer;}
+  .profile-username{font-size:18px; font-weight:800; color:#fff; margin:0 0 4px;}
+  .profile-email{font-size:12.5px; color:#8c7a95; margin:0; font-family:'JetBrains Mono',monospace;}
+  .logout-btn{margin-top:28px; background:none; border:1.5px solid #3E2B4B; color:#FF8A94; font-size:13px; font-weight:700; padding:11px 22px; border-radius:12px; cursor:pointer;}
+  .logout-btn:active{background:#1A1020;}
+  .manage-accounts-btn{display:flex; align-items:center; gap:7px; background:#1A1020; border:1px solid #2E2136; color:#c9bdd0; font-size:12.5px; font-weight:600; padding:9px 16px; border-radius:20px; cursor:pointer; margin:2px 0 18px;}
+  .manage-accounts-btn:active{background:#241a2c;}
+  .delete-account-btn{margin-top:10px; background:none; border:none; color:#6f6178; font-size:12px; font-weight:600; padding:8px; cursor:pointer; text-decoration:underline;}
+  .delete-account-btn:active{color:#FF5C6A;}
+  .danger-btn{width:100%; border:none; border-radius:12px; padding:14px; font-size:14.5px; font-weight:800; cursor:pointer; margin-top:8px; color:#fff; background:linear-gradient(90deg,#E8433F,#FF6B5C);}
+  .danger-btn:active{filter:brightness(0.9);}
+  .outline-btn{width:100%; border:1.5px solid #3E2B4B; border-radius:12px; padding:14px; font-size:14.5px; font-weight:700; cursor:pointer; margin-top:10px; color:#c9bdd0; background:transparent;}
+  .outline-btn:active{background:#1A1020;}
+  .warn-icon{font-size:38px; text-align:center; margin-bottom:6px;}
+  .warn-title{font-size:18px; font-weight:800; color:#fff; text-align:center; margin:0 0 8px;}
+  .warn-text{font-size:12.5px; color:#8c7a95; text-align:center; line-height:1.5; margin:0 0 22px;}
+
+  /* accounts list / delete flow */
+  .acc-row{display:flex; align-items:center; gap:12px; padding:13px 20px; width:100%; background:none; border:none; text-align:left; cursor:pointer; position:relative; z-index:1;}
+  .acc-row:active{background:#1A1020;}
+  .acc-active-badge{margin-left:auto; font-size:10px; font-family:'JetBrains Mono',monospace; color:#3FD68C; border:1px solid #22492F; padding:3px 8px; border-radius:10px; flex:none;}
+  .acc-add-row{display:flex; align-items:center; gap:12px; padding:13px 20px; width:100%; background:none; border:none; border-top:1px solid #1E1424; text-align:left; cursor:pointer; margin-top:6px; color:#FFC65C; font-weight:700; font-size:13.5px; position:relative; z-index:1;}
+  .acc-add-icon{width:44px; height:44px; border-radius:50%; border:1.5px dashed #3E2B4B; display:flex; align-items:center; justify-content:center; font-size:18px; flex:none;}
+  .danger-icon{font-size:34px; text-align:center; margin:6px 0 4px;}
+  .danger-title{font-size:17px; font-weight:800; text-align:center; margin:0 0 8px;}
+  .danger-text{font-size:12.5px; color:#8c7a95; text-align:center; line-height:1.55; margin:0 0 24px; padding:0 6px;}
+  .danger-btn{width:100%; border:none; border-radius:12px; padding:14px; font-size:14px; font-weight:800; cursor:pointer; margin-top:8px; color:#fff; background:#C0432B;}
+  .danger-btn:active{filter:brightness(0.9);}
+  .cancel-btn{width:100%; border:1.5px solid #3E2B4B; border-radius:12px; padding:14px; font-size:14px; font-weight:700; cursor:pointer; margin-top:10px; color:#c9bdd0; background:none;}
+  .profile-privacy-block{width:100%; margin-top:26px; padding-top:22px; border-top:1px solid #1E1424;}
+  .visually-hidden-input{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;}
+  .photo-input-overlay{position:absolute; inset:0; width:100%; height:100%; opacity:0; cursor:pointer; z-index:5; border-radius:50%;}
+
+  /* pin / archive / block */
+  .archived-bar{position:relative; z-index:1; display:flex; align-items:center; gap:10px; margin:2px 20px 6px; padding:11px 14px; background:#1A1020; border:1px solid #2E2136; border-radius:14px; cursor:pointer;}
+  .archived-bar span.lbl{flex:1; font-size:13px; font-weight:700; color:#c9bdd0;}
+  .pin-mark{font-size:11px; margin-right:3px;}
+  .ctx-sheet-btn{width:100%; text-align:left; background:none; border:none; border-top:1px solid #2E2136; color:#fff; font-size:14px; font-weight:600; padding:14px 4px; cursor:pointer; display:flex; align-items:center; gap:10px;}
+  .ctx-sheet-btn:first-of-type{border-top:none;}
+  .ctx-sheet-btn:active{background:#241a2c;}
+  .ctx-sheet-btn.danger{color:#FF8A94;}
+  .ctx-sheet-title{display:flex; align-items:center; gap:10px; padding-bottom:14px; border-bottom:1px solid #2E2136; margin-bottom:2px;}
+  .ctx-sheet-title .c-avatar{width:38px; height:38px; font-size:14px;}
+  .ctx-sheet-title span{font-weight:800; font-size:14.5px;}
+
+  /* reply preview */
+  .reply-preview{position:relative; z-index:1; display:flex; align-items:center; gap:10px; padding:9px 16px; background:#1A1020; border-top:1px solid #2E2136;}
+  .reply-preview .bar{width:3px; align-self:stretch; background:linear-gradient(180deg,#FF7A59,#FFC65C); border-radius:3px;}
+  .reply-preview .rp-mid{flex:1; min-width:0;}
+  .reply-preview .rp-name{font-size:11.5px; font-weight:800; color:#FFC65C;}
+  .reply-preview .rp-text{font-size:12px; color:#9a8ea3; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .reply-preview .rp-close{background:none; border:none; color:#8A7C93; font-size:16px; cursor:pointer; padding:4px;}
+  .msg-quote{background:rgba(0,0,0,0.18); border-left:2.5px solid rgba(255,255,255,0.5); border-radius:8px; padding:5px 9px; margin-bottom:5px; font-size:11.5px; opacity:.9;}
+  .msg-quote .mq-name{font-weight:800; display:block; margin-bottom:1px;}
+  .msg-row:not(.mine) .msg-quote{border-left-color:#FFC65C;}
+  .msg-deleted{font-style:italic; color:#8A7C93 !important; background:transparent !important; border:1px dashed #3E2B4B !important;}
+
+  /* forward modal list */
+  .fwd-list{max-height:280px; overflow-y:auto; margin:4px 0 6px; text-align:left;}
+  .fwd-search-wrap{margin:0 0 10px;}
+  .fwd-empty{color:#6f6178; font-size:13px; text-align:center; padding:18px 10px;}
+  .fwd-row{display:flex; align-items:center; gap:12px; padding:10px 6px; border-radius:12px; cursor:pointer; width:100%; background:none; border:none; text-align:left;}
+  .fwd-row:active{background:#241a2c;}
+
+  /* ============ thread wave hero header ============ */
+  .thread-hero{position:relative; z-index:1; background:linear-gradient(120deg,#FF7A59,#FFC65C 65%,#FFD98C); padding:16px 16px 30px; overflow:hidden;}
+  .thread-hero-row{display:flex; align-items:center; gap:8px; position:relative; z-index:2;}
+  .thread-hero .c-icon-btn{background:rgba(20,10,10,0.18); border-color:transparent; color:#1a0f10;}
+  .thread-hero-mid{display:flex; align-items:center; gap:9px; flex:1; min-width:0;}
+  .thread-hero-mid .c-avatar{border:2px solid rgba(255,255,255,0.55);}
+  .thread-hero-name{font-weight:800; font-size:15px; line-height:1.2; color:#1a0f10;}
+  .thread-hero .thread-subtitle{color:#5c3a1e; opacity:.8;}
+  .thread-hero-wave{position:absolute; left:0; right:0; bottom:-1px; width:100%; height:26px; z-index:1;}
+  .thread-hero-glow{position:absolute; width:180px; height:180px; border-radius:50%; background:rgba(255,255,255,0.18); top:-90px; right:-40px; z-index:0;}
+
+  /* ============ selection mode top bar ============ */
+  .sel-topbar{position:relative; z-index:2; display:none; align-items:center; justify-content:space-between; padding:16px 16px 4px; gap:10px;}
+  .sel-topbar.active{display:flex;}
+  .sel-left{display:flex; align-items:center; gap:11px; min-width:0;}
+  .sel-close{width:32px; height:32px; border-radius:50%; background:rgba(20,10,10,0.18); border:none; color:#1a0f10; font-size:15px; display:flex; align-items:center; justify-content:center; cursor:pointer; flex:none;}
+  .sel-count{font-weight:800; font-size:15.5px; color:#1a0f10; white-space:nowrap;}
+  .sel-icons{display:flex; gap:6px; align-items:center; flex:none;}
+  .sel-icon-btn{background:rgba(20,10,10,0.14); border:none; color:#1a0f10; font-size:16px; cursor:pointer; padding:0; width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center;}
+  .sel-icon-btn:active{background:rgba(20,10,10,0.28);}
+  .sel-icon-btn.hidden{display:none;}
+
+  /* ============ selection mode bottom bar (Reply / Forward) ============ */
+  .sel-bottombar{position:relative; z-index:1; display:none; border-top:1px solid #1E1424;}
+  .sel-bottombar.active{display:flex;}
+  .sel-bottom-btn{flex:1; display:flex; align-items:center; justify-content:center; gap:8px; padding:15px 10px; background:none; border:none; color:#fff; font-size:14px; font-weight:700; cursor:pointer;}
+  .sel-bottom-btn:active{background:#1A1020;}
+  .sel-bottom-btn:disabled{opacity:.3; cursor:default;}
+  .sel-bottom-btn:disabled:active{background:none;}
+  .sel-bottom-divider{width:1px; align-self:stretch; margin:10px 0; background:#1E1424;}
+
+  /* selectable message rows */
+  .msg-row{cursor:default; transition:background .15s ease;}
+  .msg-row.selectable{cursor:pointer;}
+  .msg-row.selected{background:rgba(255,198,92,0.08); border-radius:14px; margin-left:8px; margin-right:8px; padding:2px 0;}
+  .msg-edited-tag{opacity:.7; font-style:italic;}
+</style>
+</head>
+<body>
+
+  <!-- ============ AUTH (root screen) ============ -->
+  <div id="screen-auth" class="stage">
+    <div class="frame">
+      <div class="auth">
+        <div class="stars" id="stars-auth"></div>
+        <div class="auth-content">
+          <svg class="constel" viewBox="0 0 150 44"><g stroke="#5C4C64" stroke-width="1"><line x1="12" y1="30" x2="46" y2="12"/><line x1="46" y1="12" x2="88" y2="24"/><line x1="88" y1="24" x2="128" y2="10"/></g><g fill="#FFC65C"><circle cx="12" cy="30" r="2.4"/><circle cx="46" cy="12" r="2"/><circle cx="88" cy="24" r="2.6"/><circle cx="128" cy="10" r="2"/></g></svg>
+          <p class="logo">Chat<b>Nova</b></p>
+          <p class="tag">find people, not numbers</p>
+
+          <div class="tabs">
+            <button class="tabbtn active" id="tab-login" onclick="setAuthTab('login')">Log In</button>
+            <button class="tabbtn" id="tab-signup" onclick="setAuthTab('signup')">Sign Up</button>
+          </div>
+
+          <div id="pane-login">
+            <div class="field"><label>Email address</label><input type="email" id="loginEmail" placeholder="you@example.com"></div>
+            <p class="field-error-msg" id="loginEmail-err"></p>
+            <div class="field field-spacer"><label>Password</label>
+              <div class="pw-wrap"><input type="password" id="loginPassword" placeholder="••••••••"><button type="button" class="pw-toggle" id="loginPassword-eye" onclick="togglePasswordVisibility('loginPassword')">👁</button></div>
+            </div>
+            <p class="field-error-msg" id="loginPassword-err" style="margin-top:-9px; margin-bottom:9px;"></p>
+            <button class="primary-btn" onclick="tryLogin()">Log In</button>
+            <div class="linkrow"><a onclick="showToast('Password reset — coming when we build the real app')">Forgot password?</a></div>
+          </div>
+          <div id="pane-signup" class="hidden">
+            <div class="field"><label>Email address</label><input type="email" id="signupEmail" placeholder="you@example.com"></div>
+            <p class="field-error-msg" id="signupEmail-err"></p>
+            <div class="field field-spacer"><label>Password</label>
+              <div class="pw-wrap"><input type="password" id="signupPassword" placeholder="••••••••"><button type="button" class="pw-toggle" id="signupPassword-eye" onclick="togglePasswordVisibility('signupPassword')">👁</button></div>
+            </div>
+            <p class="field-error-msg" id="signupPassword-err" style="margin-top:-9px; margin-bottom:9px;"></p>
+            <button class="primary-btn" onclick="trySignup()">Create Account</button>
+          </div>
+          <div class="linkrow" id="switch-login-signup">New here? <a onclick="setAuthTab('signup')">Create an account</a></div>
+          <p class="foot">CHATNOVA · A SMALL CONSTELLATION</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ PROFILE SETUP ============ -->
+  <div id="screen-setup" class="stage hidden">
+    <div class="frame">
+      <div class="auth">
+        <div class="stars" id="stars-setup"></div>
+        <div class="auth-content">
+          <p class="tag" style="margin-bottom:6px;">STEP 2 OF 2</p>
+          <p class="logo" style="font-size:22px;">Set up your profile</p>
+          <p class="tag" style="margin:6px 0 22px;">last step before you're in</p>
+
+          <div class="field">
+            <label>Username</label><input type="text" id="setupUsername" placeholder="e.g. arjun_94">
+            <p class="hint">This is what people search to find you. No phone numbers, ever.</p>
+          </div>
+          <p class="field-error-msg" id="setupUsername-err" style="margin-bottom:14px;"></p>
+
+          <div class="field">
+            <label>Who can message you?</label>
+            <div class="privacy-cards">
+              <button class="privacy-card" id="card-public" onclick="setPrivacy('public')">
+                <span class="pc-icon">🌐</span>
+                <span class="pc-title">Public</span>
+                <span class="pc-desc">Anyone can find you and message right away.</span>
+              </button>
+              <button class="privacy-card" id="card-private" onclick="setPrivacy('private')">
+                <span class="pc-icon">🔒</span>
+                <span class="pc-title">Private</span>
+                <span class="pc-desc">People must send a request. You decide who gets in.</span>
+              </button>
+            </div>
+            <p class="field-error-msg" id="privacy-err"></p>
+          </div>
+
+          <button class="primary-btn" onclick="tryFinishSetup()">Finish</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ CHATS LIST ============ -->
+  <div id="screen-chats" class="stage hidden">
+    <div class="frame">
+      <div class="chats">
+        <div class="stars" id="stars-chats"></div>
+
+        <div class="c-topbar">
+          <button class="c-avatar-me" id="avatarMeBtn" onclick="openProfilePage()">A</button>
+          <p class="c-title">Chats</p>
+          <button class="c-icon-btn" onclick="showToast('Settings')">⚙</button>
+        </div>
+
+        <div class="c-search-wrap">
+          <button class="c-search" onclick="openSearchPage()" style="width:100%; border:1.5px solid #2E2136; cursor:pointer;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A7C93" stroke-width="2.3"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.6" y2="16.6"/></svg>
+            <span style="color:#8A7C93; font-size:14px;">Search a username to chat...</span>
+          </button>
+        </div>
+
+        <button class="archived-bar hidden" id="archivedBar" onclick="openArchivedPage()">
+          <span>📦</span><span class="lbl">Archived</span><span class="c-badge-dot" id="archivedCount" style="position:static;">0</span>
+        </button>
+        <div class="c-list" id="chatsListArea"></div>
+        <div class="empty-state hidden" id="chatsEmptyState">
+          <div class="es-icon">💬</div>
+          <p class="es-title">No chats yet</p>
+          <p class="es-sub">Search a username above (or tap the button below) to start your first chat.</p>
+        </div>
+
+        <button class="c-fab" onclick="openRequestsPage()">
+          <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="#1a0f10" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 7l9 6l9 -6"/>
+            <rect x="3" y="5" width="18" height="14" rx="2"/>
+          </svg>
+          <span class="c-badge-dot hidden" id="reqBadge" style="top:-4px; right:-4px;">0</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ CHAT THREAD ============ -->
+  <div id="screen-thread" class="stage hidden">
+    <div class="frame">
+      <div class="chats">
+        <div class="stars" id="stars-thread"></div>
+
+        <div class="thread-hero">
+          <div class="thread-hero-glow"></div>
+          <div class="thread-hero-row">
+            <button class="c-icon-btn" onclick="closeThread()">←</button>
+            <div class="thread-hero-mid">
+              <div class="c-avatar" id="threadAvatar" style="width:36px; height:36px; font-size:13.5px;">?</div>
+              <div style="min-width:0;">
+                <div id="threadUsername" class="thread-hero-name">username</div>
+                <div class="thread-subtitle" id="threadSubtitle"></div>
+              </div>
+            </div>
+            <span style="width:34px;"></span>
+          </div>
+          <svg class="thread-hero-wave" viewBox="0 0 420 26" preserveAspectRatio="none">
+            <path d="M0,10 C60,26 120,0 180,10 C240,20 300,0 360,10 C390,15 405,12 420,8 L420,26 L0,26 Z" fill="#120A18"/>
+          </svg>
+        </div>
+
+        <div class="sel-topbar" id="threadSelBar">
+          <div class="sel-left">
+            <button class="sel-close" onclick="exitSelectionMode()">✕</button>
+            <span class="sel-count" id="selCount">1 Selected</span>
+          </div>
+          <div class="sel-icons">
+            <button class="sel-icon-btn" id="selEditBtn" onclick="startEditFromSelection()" title="Edit">✏️</button>
+            <button class="sel-icon-btn" id="selCopyBtn" onclick="copyFromSelection()" title="Copy">📋</button>
+            <button class="sel-icon-btn" id="selForwardBtn" onclick="openForwardModal()" title="Forward">➡️</button>
+            <button class="sel-icon-btn" id="selDeleteBtn" onclick="deleteFromSelection()" title="Delete">🗑️</button>
+          </div>
+        </div>
+
+        <div class="thread-messages" id="threadMessages"></div>
+
+        <div class="sel-bottombar" id="threadSelBottomBar">
+          <button class="sel-bottom-btn" id="selReplyBtn" onclick="startReplyFromSelection()">↩️ Reply</button>
+          <div class="sel-bottom-divider"></div>
+          <button class="sel-bottom-btn" onclick="openForwardModal()">➡️ Forward</button>
+        </div>
+
+        <div class="reply-preview hidden" id="replyPreviewBar">
+          <div class="bar"></div>
+          <div class="rp-mid"><div class="rp-name" id="replyPreviewName"></div><div class="rp-text" id="replyPreviewText"></div></div>
+          <button class="rp-close" onclick="cancelReply()">✕</button>
+        </div>
+        <div class="thread-input-row" id="threadInputRow">
+          <input type="text" id="threadInput" placeholder="Message..." onkeydown="if(event.key==='Enter')sendThreadMessage()">
+          <button class="thread-send" onclick="sendThreadMessage()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1a0f10" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MESSAGE REQUESTS ============ -->
+  <div id="screen-requests" class="stage hidden">
+    <div class="frame">
+      <div class="chats" style="min-height:520px;">
+        <div class="stars" id="stars-requests"></div>
+        <div class="c-topbar">
+          <button class="c-icon-btn" onclick="closeRequestsPage()">←</button>
+          <p class="c-title" id="requestsTitle">Requests</p>
+          <span style="width:34px;"></span>
+        </div>
+        <div class="tabs hidden" id="requestsTabs" style="margin:10px 20px 6px; position:relative; z-index:1;">
+          <button class="tabbtn active" id="reqTabReceived" onclick="setRequestsTab('received')">Received</button>
+          <button class="tabbtn" id="reqTabSent" onclick="setRequestsTab('sent')">Sent</button>
+        </div>
+        <div id="requestsListArea"></div>
+        <div id="sentRequestsListArea" class="hidden"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ CONFIRM REQUEST MODAL ============ -->
+  <div id="confirmModal" class="modal-overlay hidden">
+    <div class="modal-box">
+      <div class="modal-icon">🔒</div>
+      <p class="modal-text" id="confirmModalText">Do you want to send a request to chat?</p>
+      <div class="modal-actions">
+        <button class="outline-btn" onclick="closeConfirmModal()">No</button>
+        <button class="primary-btn" id="confirmModalYesBtn">Yes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ PHOTO ACTION SHEET ============ -->
+  <div id="photoActionModal" class="modal-overlay hidden">
+    <div class="modal-box">
+      <div class="modal-icon">🖼️</div>
+      <p class="modal-text">What would you like to do?</p>
+      <button class="primary-btn" onclick="viewProfilePhoto()">👁 Show Photo</button>
+      <button class="outline-btn" onclick="triggerEditPhoto()">✏️ Edit Photo</button>
+      <button class="outline-btn" onclick="closePhotoActionModal()">Cancel</button>
+    </div>
+  </div>
+
+  <!-- ============ PHOTO VIEWER ============ -->
+  <div id="photoViewModal" class="modal-overlay hidden" onclick="closePhotoViewModal()">
+    <div style="max-width:280px; width:100%;" id="photoViewBox"></div>
+  </div>
+
+  <!-- ============ CHAT ROW CONTEXT MENU ============ -->
+  <div id="chatActionModal" class="modal-overlay hidden" onclick="if(event.target===this)closeChatActionModal()">
+    <div class="modal-box" style="text-align:left;">
+      <div class="ctx-sheet-title">
+        <div class="c-avatar" id="chatActionAvatar" style="background:#333;"></div>
+        <span id="chatActionName">username</span>
+      </div>
+      <button class="ctx-sheet-btn" id="chatActionPinBtn" onclick="toggleChatPin()">📌 <span id="chatActionPinLabel">Pin Chat</span></button>
+      <button class="ctx-sheet-btn" id="chatActionArchiveBtn" onclick="toggleChatArchive()">📦 <span id="chatActionArchiveLabel">Archive Chat</span></button>
+      <button class="ctx-sheet-btn danger" onclick="confirmBlockUser()">🚫 Block Account</button>
+      <button class="ctx-sheet-btn danger" onclick="confirmDeleteChat()">🗑️ Delete Chat</button>
+      <button class="ctx-sheet-btn" onclick="closeChatActionModal()">Cancel</button>
+    </div>
+  </div>
+
+  <!-- ============ BLOCK CONFIRM ============ -->
+  <div id="blockConfirmModal" class="modal-overlay hidden">
+    <div class="modal-box">
+      <div class="modal-icon">🚫</div>
+      <p class="modal-text" id="blockConfirmText">Block this account? You won't be able to find or message each other anymore.</p>
+      <div class="modal-actions">
+        <button class="outline-btn" onclick="document.getElementById('blockConfirmModal').classList.add('hidden')">Cancel</button>
+        <button class="danger-btn" id="blockConfirmYesBtn" style="margin-top:0;">Block</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ DELETE CHAT CONFIRM ============ -->
+  <div id="deleteChatConfirmModal" class="modal-overlay hidden">
+    <div class="modal-box">
+      <div class="modal-icon">🗑️</div>
+      <p class="modal-text" id="deleteChatConfirmText">Delete this chat from your list?</p>
+      <div class="modal-actions">
+        <button class="outline-btn" onclick="document.getElementById('deleteChatConfirmModal').classList.add('hidden')">Cancel</button>
+        <button class="danger-btn" id="deleteChatConfirmYesBtn" style="margin-top:0;">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ DELETE MESSAGE CHOICE (WhatsApp-style) ============ -->
+  <div id="deleteMessageModal" class="modal-overlay hidden" onclick="if(event.target===this)closeDeleteMessageModal()">
+    <div class="modal-box" style="text-align:left;">
+      <button class="ctx-sheet-btn danger hidden" id="deleteForEveryoneBtn" onclick="deleteActiveMessage(true)" style="border-top:none;">Delete for everyone</button>
+      <button class="ctx-sheet-btn danger" id="deleteForMeBtn" onclick="deleteActiveMessage(false)">Delete for me</button>
+      <button class="ctx-sheet-btn" onclick="closeDeleteMessageModal()">Cancel</button>
+    </div>
+  </div>
+
+  <!-- ============ FORWARD MODAL ============ -->
+  <div id="forwardModal" class="modal-overlay hidden" onclick="if(event.target===this)closeForwardModal()">
+    <div class="modal-box" style="text-align:left; max-width:340px;">
+      <p class="modal-text" style="text-align:center; margin-bottom:10px;">Forward to…</p>
+      <div class="fwd-search-wrap">
+        <div class="c-search" style="border:1.5px solid #2E2136;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A7C93" stroke-width="2.3"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.6" y2="16.6"/></svg>
+          <input type="text" id="forwardSearchInput" placeholder="Search a chat..." oninput="renderForwardList()">
+        </div>
+      </div>
+      <div class="fwd-list" id="forwardListArea"></div>
+      <button class="outline-btn" onclick="closeForwardModal()">Cancel</button>
+    </div>
+  </div>
+
+  <!-- ============ SEARCH ============ -->
+  <div id="screen-search" class="stage hidden">
+    <div class="frame">
+      <div class="chats">
+        <div class="stars" id="stars-search"></div>
+        <div class="c-topbar">
+          <button class="c-icon-btn" onclick="showScreen('screen-chats')">←</button>
+          <p class="c-title">Search</p>
+          <span style="width:34px;"></span>
+        </div>
+        <div class="c-search-wrap">
+          <div class="c-search" style="border:1.5px solid #FF9F6B;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A7C93" stroke-width="2.3"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.6" y2="16.6"/></svg>
+            <input type="text" id="searchPageInput" placeholder="jaise: priya_k, rohan.d..." autocomplete="off" oninput="onSearchPageInput()">
+            <span class="search-clear-x hidden" id="searchClearX" onclick="clearSearchPageInput()">✕</span>
+          </div>
+        </div>
+        <div class="c-list" id="searchResultsArea"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ PROFILE ============ -->
+  <div id="screen-profile" class="stage hidden">
+    <div class="frame">
+      <div class="chats" style="min-height:520px;">
+        <div class="stars" id="stars-profile"></div>
+        <div class="c-topbar">
+          <button class="c-icon-btn" onclick="showScreen('screen-chats')">←</button>
+          <p class="c-title">Profile</p>
+          <span style="width:34px;"></span>
+        </div>
+        <div class="profile-body">
+          <div class="profile-avatar-wrap">
+            <div class="profile-avatar" id="profileAvatar" onclick="openPhotoActionSheet()" style="cursor:pointer;">A</div>
+            <label for="profilePhotoInput" class="profile-photo-btn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a0f10" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1 -2 2H3a2 2 0 0 1 -2 -2V8a2 2 0 0 1 2 -2h4l2 -3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            </label>
+            <input type="file" id="profilePhotoInput" accept="image/*" class="visually-hidden-input" onchange="onProfilePhotoChosen(this)">
+          </div>
+          <p class="hint" style="margin-top:-8px;">Tap your photo to view or change it</p>
+
+          <button class="manage-accounts-btn" onclick="openAccountsPage()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c9bdd0" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0 -4 -4H5a4 4 0 0 0 -4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0 -3 -3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            Manage Accounts
+          </button>
+          <button class="manage-accounts-btn" onclick="openBlockedPage()" style="margin-top:0;">🚫 Blocked Accounts</button>
+
+          <p class="profile-username" id="profileUsername">username</p>
+          <p class="profile-email" id="profileEmail">email@example.com</p>
+
+          <div class="profile-privacy-block">
+            <p class="hint" style="text-align:center; margin-bottom:10px;">Who can message you?</p>
+            <div class="privacy-cards">
+              <button class="privacy-card" id="profile-card-public" onclick="setProfilePrivacy('public')">
+                <span class="pc-icon">🌐</span>
+                <span class="pc-title">Public</span>
+                <span class="pc-desc">Anyone can find you and message right away.</span>
+              </button>
+              <button class="privacy-card" id="profile-card-private" onclick="setProfilePrivacy('private')">
+                <span class="pc-icon">🔒</span>
+                <span class="pc-title">Private</span>
+                <span class="pc-desc">People must send a request. You decide who gets in.</span>
+              </button>
+            </div>
+          </div>
+
+          <button class="logout-btn" onclick="logout()">Log Out</button>
+          <button class="delete-account-btn" onclick="openDeleteVerify()">Delete Account</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- ============ ACCOUNTS (switch / add) ============ -->
+  <div id="screen-accounts" class="stage hidden">
+    <div class="frame">
+      <div class="chats" style="min-height:480px;">
+        <div class="stars" id="stars-accounts"></div>
+        <div class="c-topbar">
+          <button class="c-icon-btn" onclick="showScreen('screen-profile')">←</button>
+          <p class="c-title">Accounts</p>
+          <span style="width:34px;"></span>
+        </div>
+        <p class="hint" style="text-align:center; margin:8px 20px 4px; position:relative; z-index:1;">Tap an account to switch to it.</p>
+        <div class="c-list" id="accountsListArea" style="padding-top:6px;"></div>
+        <div style="padding:8px 20px 22px; position:relative; z-index:1;">
+          <button class="primary-btn" onclick="openAddAccount()">+ Add Another Account</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ ARCHIVED CHATS ============ -->
+  <div id="screen-archived" class="stage hidden">
+    <div class="frame">
+      <div class="chats" style="min-height:480px;">
+        <div class="stars" id="stars-archived"></div>
+        <div class="c-topbar">
+          <button class="c-icon-btn" onclick="showScreen('screen-chats')">←</button>
+          <p class="c-title">Archived</p>
+          <span style="width:34px;"></span>
+        </div>
+        <div class="c-list" id="archivedListArea" style="padding-top:6px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ BLOCKED ACCOUNTS ============ -->
+  <div id="screen-blocked" class="stage hidden">
+    <div class="frame">
+      <div class="chats" style="min-height:480px;">
+        <div class="stars" id="stars-blocked"></div>
+        <div class="c-topbar">
+          <button class="c-icon-btn" onclick="showScreen('screen-profile')">←</button>
+          <p class="c-title">Blocked Accounts</p>
+          <span style="width:34px;"></span>
+        </div>
+        <div class="c-list" id="blockedListArea" style="padding-top:6px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="screen-delete-verify" class="stage hidden">
+    <div class="frame">
+      <div class="auth">
+        <div class="stars" id="stars-delete-verify"></div>
+        <div class="auth-content">
+          <button class="c-icon-btn" onclick="showScreen('screen-profile')" style="margin-bottom:18px;">←</button>
+          <p class="logo" style="font-size:21px;">Confirm it's you</p>
+          <p class="tag" style="margin:6px 0 24px;">enter your email and password to continue</p>
+
+          <div class="field"><label>Email address</label><input type="email" id="deleteEmail" placeholder="you@example.com"></div>
+          <p class="field-error-msg" id="deleteEmail-err"></p>
+          <div class="field field-spacer"><label>Password</label>
+            <div class="pw-wrap"><input type="password" id="deletePassword" placeholder="••••••••"><button type="button" class="pw-toggle" id="deletePassword-eye" onclick="togglePasswordVisibility('deletePassword')">👁</button></div>
+          </div>
+          <p class="field-error-msg" id="deletePassword-err" style="margin-top:-9px; margin-bottom:9px;"></p>
+
+          <button class="danger-btn" onclick="tryDeleteVerify()">Continue</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ DELETE ACCOUNT — STEP 2: FINAL CONFIRM ============ -->
+  <div id="screen-delete-confirm" class="stage hidden">
+    <div class="frame">
+      <div class="auth">
+        <div class="stars" id="stars-delete-confirm"></div>
+        <div class="auth-content" style="padding-top:30px;">
+          <div class="warn-icon">⚠️</div>
+          <p class="warn-title">Delete your account?</p>
+          <p class="warn-text" id="deleteConfirmText">This will permanently delete your ChatNova account and all its chats. This can't be undone.</p>
+          <button class="danger-btn" onclick="confirmDeleteAccount()">Yes, Delete My Account</button>
+          <button class="outline-btn" onclick="showScreen('screen-profile')">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDjRvyKixtja1p6cn1DuWIjfyiZJzAagIQ",
+  authDomain: "chatnova-26734.firebaseapp.com",
+  projectId: "chatnova-26734",
+  storageBucket: "chatnova-26734.firebasestorage.app",
+  messagingSenderId: "345812636578",
+  appId: "1:345812636578:web:6558aeec0e095e0cba18fb"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+</script>
+<script>
+/* ---------------- navigation ---------------- */
+function showScreen(id){
+  document.querySelectorAll('.stage').forEach(s=>s.classList.toggle('hidden', s.id!==id));
+  window.scrollTo(0,0);
+}
+function setAuthTab(tab){
+  document.getElementById('tab-login').classList.toggle('active', tab==='login');
+  document.getElementById('tab-signup').classList.toggle('active', tab==='signup');
+  document.getElementById('pane-login').classList.toggle('hidden', tab!=='login');
+  document.getElementById('pane-signup').classList.toggle('hidden', tab!=='signup');
+  document.getElementById('switch-login-signup').classList.toggle('hidden', tab==='signup');
+}
+let toastTimer;
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 1700);
+}
+
+/* ---------------- validation helpers ---------------- */
+function isValidEmail(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()); }
+function markError(input, errId, msg){
+  input.classList.add('error');
+  input.classList.remove('shake'); void input.offsetWidth; input.classList.add('shake');
+  if(errId) document.getElementById(errId).textContent = msg || '';
+}
+function clearError(input, errId){
+  input.classList.remove('error');
+  if(errId) document.getElementById(errId).textContent = '';
+}
+function togglePasswordVisibility(id){
+  const input = document.getElementById(id);
+  const eye = document.getElementById(id + '-eye');
+  if(input.type === 'password'){ input.type = 'text'; eye.textContent = '🙈'; }
+  else { input.type = 'password'; eye.textContent = '👁'; }
+}
+
+/* ---------------- accounts (real Firebase Auth) ---------------- */
+let currentUser = null; // {uid, username, usernameLower, email, privacy, photo}
+let currentThread = null; // {uid, username}
+let messagesUnsub = null;
+let chatsUnsub = null;
+let inboxUnsub = null;
+let sentRequestsUnsub = null;
+let latestReceivedRequests = [];
+let blockedSet = new Set();   // uids I blocked
+let blockedBySet = new Set(); // uids who blocked me
+let blockedUnsub = null;
+let blockedByUnsub = null;
+let allContactsRaw = [];
+let hiddenMsgIds = new Set(); // "deleted for me" messages in the open thread
+let pressTimer = null;
+let activeChatCtx = null;     // {uid, username} for chat row context menu
+let activeMessageCtx = null;  // {id, text, mine, senderUsername} for message action sheet
+let replyingTo = null;        // {id, text, senderUsername}
+let editingMessageId = null;  // id of message currently being edited, or null
+let threadMsgMap = {};        // id -> full message data, for the currently open thread
+let selectionMode = false;
+let selectedMsgIds = new Set();
+
+function refreshBlockedSets(){
+  if(!currentUser) return Promise.resolve();
+  if(blockedUnsub) blockedUnsub();
+  if(blockedByUnsub) blockedByUnsub();
+  return new Promise(resolve=>{
+    let gotFirst = false, gotSecond = false;
+    const maybeResolve = ()=>{ if(gotFirst && gotSecond) resolve(); };
+    blockedUnsub = db.collection('users').doc(currentUser.uid).collection('blocked')
+      .onSnapshot(snap=>{
+        blockedSet = new Set(); snap.forEach(d=> blockedSet.add(d.id));
+        gotFirst = true; maybeResolve();
+        renderChatsList(allContactsRaw);
+      });
+    blockedByUnsub = db.collection('users').doc(currentUser.uid).collection('blockedBy')
+      .onSnapshot(snap=>{
+        blockedBySet = new Set(); snap.forEach(d=> blockedBySet.add(d.id));
+        gotSecond = true; maybeResolve();
+        renderChatsList(allContactsRaw);
+      });
+  });
+}
+function isBlockedEitherWay(uid){ return blockedSet.has(uid) || blockedBySet.has(uid); }
+function bindPress(el, onLongPress, onTap){
+  let fired = false;
+  const start = ()=>{ fired=false; clearTimeout(pressTimer); pressTimer=setTimeout(()=>{ fired=true; onLongPress(); }, 480); };
+  const cancel = ()=>{ clearTimeout(pressTimer); };
+  const end = ()=>{ clearTimeout(pressTimer); if(!fired && onTap) onTap(); };
+  el.addEventListener('touchstart', start, {passive:true});
+  el.addEventListener('touchend', end);
+  el.addEventListener('touchmove', cancel);
+  el.addEventListener('mousedown', start);
+  el.addEventListener('mouseup', end);
+  el.addEventListener('mouseleave', cancel);
+}
+
+function updateAvatarMe(){
+  if(!currentUser) return;
+  const btn = document.getElementById('avatarMeBtn');
+  if(currentUser.photo){ btn.textContent=''; btn.style.background = `center/cover no-repeat url(${currentUser.photo})`; }
+  else { btn.textContent = currentUser.username[0].toUpperCase(); btn.style.background = avatarColor(currentUser.username); }
+}
+
+function tryLogin(){
+  const email = document.getElementById('loginEmail');
+  const pass = document.getElementById('loginPassword');
+  let ok = true;
+  if(!isValidEmail(email.value)){ markError(email,'loginEmail-err','Enter a valid email address'); ok=false; } else clearError(email,'loginEmail-err');
+  if(pass.value.length===0){ markError(pass,'loginPassword-err','Enter your password'); ok=false; } else clearError(pass,'loginPassword-err');
+  if(!ok) return;
+  auth.signInWithEmailAndPassword(email.value.trim(), pass.value).catch(err=>{
+    if(err.code==='auth/user-not-found') markError(email,'loginEmail-err','No account found with this email — sign up first');
+    else if(err.code==='auth/wrong-password' || err.code==='auth/invalid-credential') markError(pass,'loginPassword-err','Incorrect password');
+    else showToast('Error: '+err.message);
+  });
+}
+function trySignup(){
+  const email = document.getElementById('signupEmail');
+  const pass = document.getElementById('signupPassword');
+  let ok = true;
+  if(!isValidEmail(email.value)){ markError(email,'signupEmail-err','Enter a valid email address'); ok=false; } else clearError(email,'signupEmail-err');
+  if(pass.value.length<6){ markError(pass,'signupPassword-err','Password should be at least 6 characters'); ok=false; } else clearError(pass,'signupPassword-err');
+  if(!ok) return;
+  auth.createUserWithEmailAndPassword(email.value.trim(), pass.value).then(()=>{
+    showScreen('screen-setup');
+  }).catch(err=>{
+    if(err.code==='auth/email-already-in-use') markError(email,'signupEmail-err','An account with this email already exists — log in instead');
+    else showToast('Error: '+err.message);
+  });
+}
+let privacyMode = null;
+function setPrivacy(mode){
+  privacyMode = mode;
+  document.getElementById('card-public').classList.toggle('active', mode==='public');
+  document.getElementById('card-private').classList.toggle('active', mode==='private');
+  document.getElementById('privacy-err').textContent = '';
+}
+function tryFinishSetup(){
+  const uname = document.getElementById('setupUsername');
+  const val = uname.value.trim();
+  let ok = true;
+  if(val.length<3){ markError(uname,'setupUsername-err','Pick a username (at least 3 characters)'); ok=false; } else clearError(uname,'setupUsername-err');
+  if(!privacyMode){ document.getElementById('privacy-err').textContent = 'Choose Public or Private to continue'; ok=false; }
+  if(!ok) return;
+  const user = auth.currentUser;
+  if(!user) return;
+  const lower = val.toLowerCase();
+  db.collection('users').where('usernameLower','==',lower).get().then(snap=>{
+    if(!snap.empty){ markError(uname,'setupUsername-err','That username is taken — try another'); return; }
+    const profile = { username: val, usernameLower: lower, email: user.email, privacy: privacyMode, photo: null };
+    return db.collection('users').doc(user.uid).set(profile).then(()=>{
+      currentUser = { uid: user.uid, ...profile };
+      updateAvatarMe();
+      refreshBlockedSets().then(()=>{ startChatsListener(); startInboxListener(); });
+      showScreen('screen-chats');
+      showToast('Account created — welcome to ChatNova');
+    });
+  }).catch(err=> showToast('Error: '+err.message));
+}
+function logout(){
+  auth.signOut();
+  currentUser = null; currentThread = null;
+  blockedSet = new Set(); blockedBySet = new Set(); allContactsRaw = [];
+  exitSelectionMode(); editingMessageId = null; replyingTo = null; threadMsgMap = {};
+  if(messagesUnsub){ messagesUnsub(); messagesUnsub=null; }
+  if(chatsUnsub){ chatsUnsub(); chatsUnsub=null; }
+  if(inboxUnsub){ inboxUnsub(); inboxUnsub=null; }
+  if(sentRequestsUnsub){ sentRequestsUnsub(); sentRequestsUnsub=null; }
+  if(blockedUnsub){ blockedUnsub(); blockedUnsub=null; }
+  if(blockedByUnsub){ blockedByUnsub(); blockedByUnsub=null; }
+  ['loginEmail','loginPassword','signupEmail','signupPassword'].forEach(id=>{
+    const el = document.getElementById(id); if(el) el.value = '';
+  });
+  setAuthTab('login');
+  showScreen('screen-auth');
+}
+auth.onAuthStateChanged(user=>{
+  if(!user) return;
+  db.collection('users').doc(user.uid).get().then(doc=>{
+    if(doc.exists){
+      currentUser = { uid:user.uid, ...doc.data() };
+      updateAvatarMe();
+      refreshBlockedSets().then(()=>{ startChatsListener(); startInboxListener(); });
+      showScreen('screen-chats');
+    } else if(document.getElementById('screen-setup').classList.contains('hidden')){
+      showScreen('screen-setup');
+    }
+  });
+});
+
+/* ---------------- manage accounts (simplified: real auth = one session) ---------------- */
+function openAccountsPage(){
+  const area = document.getElementById('accountsListArea');
+  area.innerHTML = currentUser ? `
+    <div class="c-row" style="cursor:default;">
+      <div class="c-avatar-wrap"><div class="c-avatar" style="background:${avatarColor(currentUser.username)};">${escapeHtml(currentUser.username[0].toUpperCase())}</div></div>
+      <div class="c-mid"><div class="c-row-top"><span class="c-name">${escapeHtml(currentUser.username)}</span><span class="c-time">Active</span></div><div class="c-preview">${escapeHtml(currentUser.email)}</div></div>
+    </div>` : '';
+  showScreen('screen-accounts');
+}
+function openAddAccount(){
+  logout();
+  setAuthTab('signup');
+  showToast('Logged out — sign up or log in with another account');
+}
+
+/* ---------------- delete account ---------------- */
+function openDeleteVerify(){
+  ['deleteEmail','deletePassword'].forEach(id=>{
+    const el = document.getElementById(id);
+    el.value = ''; clearError(el, id+'-err');
+  });
+  showScreen('screen-delete-verify');
+}
+function tryDeleteVerify(){
+  const email = document.getElementById('deleteEmail');
+  const pass = document.getElementById('deletePassword');
+  let ok = true;
+  if(!isValidEmail(email.value)){ markError(email,'deleteEmail-err','Enter a valid email address'); ok=false; } else clearError(email,'deleteEmail-err');
+  if(pass.value.length===0){ markError(pass,'deletePassword-err','Enter your password'); ok=false; } else clearError(pass,'deletePassword-err');
+  if(!ok) return;
+  if(!currentUser || email.value.trim().toLowerCase() !== currentUser.email.toLowerCase()){
+    markError(email,'deleteEmail-err','This must be the email of the account you are logged into'); return;
+  }
+  const credential = firebase.auth.EmailAuthProvider.credential(currentUser.email, pass.value);
+  auth.currentUser.reauthenticateWithCredential(credential).then(()=>{
+    document.getElementById('deleteConfirmText').textContent =
+      `This will permanently delete "${currentUser.username}" (${currentUser.email}) and all its chats. This can't be undone.`;
+    showScreen('screen-delete-confirm');
+  }).catch(()=> markError(pass,'deletePassword-err','Incorrect password'));
+}
+function confirmDeleteAccount(){
+  if(!currentUser) return;
+  const uid = currentUser.uid;
+  const userRef = db.collection('users').doc(uid);
+
+  Promise.all([
+    userRef.collection('contacts').get(),
+    userRef.collection('requests').get(),
+    userRef.collection('sentRequests').get(),
+    userRef.collection('newContacts').get()
+  ]).then(([contactsSnap, requestsSnap, sentSnap, newContactsSnap])=>{
+    const batch = db.batch();
+    const chatMsgDeletions = [];
+
+    contactsSnap.forEach(d=>{
+      const otherUid = d.id;
+      batch.delete(db.collection('users').doc(otherUid).collection('contacts').doc(uid));
+      batch.delete(db.collection('users').doc(otherUid).collection('newContacts').doc(uid));
+      batch.delete(userRef.collection('contacts').doc(otherUid));
+      const tid = threadIdFor(uid, otherUid);
+      chatMsgDeletions.push(
+        db.collection('chats').doc(tid).collection('messages').get().then(msgSnap=>{
+          if(msgSnap.empty) return null;
+          const b2 = db.batch();
+          msgSnap.forEach(m=> b2.delete(m.ref));
+          return b2.commit();
+        })
+      );
+    });
+
+    requestsSnap.forEach(d=>{
+      const fromUid = d.id;
+      batch.delete(db.collection('users').doc(fromUid).collection('sentRequests').doc(uid));
+      batch.delete(userRef.collection('requests').doc(fromUid));
+    });
+
+    sentSnap.forEach(d=>{
+      const toUid = d.id;
+      batch.delete(db.collection('users').doc(toUid).collection('requests').doc(uid));
+      batch.delete(userRef.collection('sentRequests').doc(toUid));
+    });
+
+    newContactsSnap.forEach(d=> batch.delete(userRef.collection('newContacts').doc(d.id)));
+    batch.delete(userRef);
+
+    return Promise.all([batch.commit(), ...chatMsgDeletions]);
+  }).then(()=> auth.currentUser.delete())
+  .then(()=>{
+    if(chatsUnsub){ chatsUnsub(); chatsUnsub=null; }
+    if(inboxUnsub){ inboxUnsub(); inboxUnsub=null; }
+    if(sentRequestsUnsub){ sentRequestsUnsub(); sentRequestsUnsub=null; }
+    if(messagesUnsub){ messagesUnsub(); messagesUnsub=null; }
+    currentUser = null;
+    setAuthTab('login');
+    showScreen('screen-auth');
+    showToast('Account deleted');
+  }).catch(err=> showToast('Could not delete: '+err.message));
+}
+
+/* ---------------- search (real users from Firestore) ---------------- */
+let recentSearches = [];
+try{ recentSearches = JSON.parse(localStorage.getItem('chatnova-recent-searches') || '[]'); }catch(e){ recentSearches = []; }
+function saveRecentSearches(){ try{ localStorage.setItem('chatnova-recent-searches', JSON.stringify(recentSearches)); }catch(e){} }
+function addRecentSearch(term){
+  recentSearches = recentSearches.filter(t => t.toLowerCase() !== term.toLowerCase());
+  recentSearches.unshift(term);
+  recentSearches = recentSearches.slice(0,8);
+  saveRecentSearches();
+}
+function openSearchPage(){
+  showScreen('screen-search');
+  const input = document.getElementById('searchPageInput');
+  input.value = '';
+  document.getElementById('searchClearX').classList.add('hidden');
+  renderSearchResults('');
+  setTimeout(()=>input.focus(), 60);
+}
+function onSearchPageInput(){
+  const q = document.getElementById('searchPageInput').value;
+  document.getElementById('searchClearX').classList.toggle('hidden', q.length===0);
+  renderSearchResults(q);
+}
+function clearSearchPageInput(){
+  const input = document.getElementById('searchPageInput');
+  input.value = '';
+  document.getElementById('searchClearX').classList.add('hidden');
+  renderSearchResults('');
+  input.focus();
+}
+function renderSearchResults(q){
+  const area = document.getElementById('searchResultsArea');
+  const query = q.trim().toLowerCase();
+  if(!query){
+    if(recentSearches.length){
+      area.innerHTML = `<p class="search-section-label">Recent Searches</p>
+        <div>${recentSearches.map(t=>`<span class="hist-chip" onclick="searchFor('${escapeHtml(t)}')">🕒 ${escapeHtml(t)}</span>`).join('')}</div>`;
+    } else {
+      area.innerHTML = `<p class="search-empty">Start typing a username to find people on ChatNova.</p>`;
+    }
+    return;
+  }
+  area.innerHTML = `<p class="search-empty">Searching…</p>`;
+  db.collection('users').get().then(snap=>{
+    const matches = [];
+    snap.forEach(doc=>{
+      if(currentUser && doc.id===currentUser.uid) return;
+      if(isBlockedEitherWay(doc.id)) return;
+      const d = doc.data();
+      if(d.username && d.username.toLowerCase().includes(query)) matches.push({uid:doc.id, ...d});
+    });
+    if(matches.length){
+      area.innerHTML = matches.map(a=>`
+        <button class="search-row" onclick="chooseSearchResult('${a.uid}','${escapeHtml(a.username)}')">
+          <div class="c-avatar" style="background:${avatarColor(a.username)}; width:44px; height:44px;">${escapeHtml(a.username[0].toUpperCase())}</div>
+          <div class="c-mid"><div class="c-name">${escapeHtml(a.username)}</div><div class="c-preview" style="margin-top:1px;">${a.privacy==='private'?'🔒 Private profile':'🌐 Public profile'}</div></div>
+        </button>`).join('');
+    } else {
+      area.innerHTML = `<p class="search-empty">No one found with username "${escapeHtml(q)}".</p>`;
+    }
+  }).catch(err=>{ area.innerHTML = `<p class="search-empty">Search failed: ${escapeHtml(err.message)}</p>`; });
+}
+function searchFor(term){
+  const input = document.getElementById('searchPageInput');
+  input.value = term;
+  document.getElementById('searchClearX').classList.remove('hidden');
+  renderSearchResults(term);
+}
+function chooseSearchResult(uid, username){
+  if(!currentUser) return;
+  addRecentSearch(username);
+  Promise.all([
+    db.collection('users').doc(uid).get(),
+    db.collection('users').doc(currentUser.uid).collection('contacts').doc(uid).get()
+  ]).then(([userDoc, contactDoc])=>{
+    if(!userDoc.exists){ showToast('User not found'); return; }
+    const target = userDoc.data();
+    const alreadyContact = contactDoc.exists;
+    if(target.privacy === 'private' && !alreadyContact){
+      showRequestConfirm(uid, username);
+    } else {
+      openThread(uid, username);
+    }
+  }).catch(err=> showToast('Error: '+err.message));
+}
+function showRequestConfirm(uid, username){
+  document.getElementById('confirmModalText').textContent = `"${username}" has a private account. Do you want to send a request to chat?`;
+  const yesBtn = document.getElementById('confirmModalYesBtn');
+  yesBtn.onclick = ()=>{ sendChatRequest(uid, username); closeConfirmModal(); };
+  document.getElementById('confirmModal').classList.remove('hidden');
+}
+function closeConfirmModal(){ document.getElementById('confirmModal').classList.add('hidden'); }
+
+function openPhotoActionSheet(){ document.getElementById('photoActionModal').classList.remove('hidden'); }
+function closePhotoActionModal(){ document.getElementById('photoActionModal').classList.add('hidden'); }
+function triggerEditPhoto(){
+  closePhotoActionModal();
+  document.getElementById('profilePhotoInput').click();
+}
+function viewProfilePhoto(){
+  closePhotoActionModal();
+  const box = document.getElementById('photoViewBox');
+  if(currentUser && currentUser.photo){
+    box.innerHTML = `<img src="${currentUser.photo}" style="width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:20px; border:1.5px solid #3E2B4B; display:block;">`;
+  } else {
+    const initial = currentUser ? currentUser.username[0].toUpperCase() : '?';
+    const bg = currentUser ? avatarColor(currentUser.username) : 'linear-gradient(135deg,#8A7C93,#5C4C64)';
+    box.innerHTML = `<div style="width:100%; aspect-ratio:1/1; border-radius:20px; background:${bg}; display:flex; align-items:center; justify-content:center; font-size:88px; font-weight:800; color:#fff;">${escapeHtml(initial)}</div>
+      <p style="text-align:center; color:#8c7a95; font-size:12px; margin-top:10px;">No custom photo set yet</p>`;
+  }
+  document.getElementById('photoViewModal').classList.remove('hidden');
+}
+function closePhotoViewModal(){ document.getElementById('photoViewModal').classList.add('hidden'); }
+function sendChatRequest(uid, username){
+  if(!currentUser) return;
+  const meUid = currentUser.uid;
+  const batch = db.batch();
+  batch.set(db.collection('users').doc(uid).collection('requests').doc(meUid), {
+    fromUsername: currentUser.username, status:'pending', createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+  batch.set(db.collection('users').doc(meUid).collection('sentRequests').doc(uid), {
+    toUsername: username, status:'pending', createdAt: firebase.firestore.FieldValue.serverTimestamp(), updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+  batch.commit().then(()=> showToast('Request sent to ' + username)).catch(err=> showToast('Error: '+err.message));
+}
+
+/* ---------------- profile page ---------------- */
+function openProfilePage(){ renderProfilePage(); showScreen('screen-profile'); }
+function renderProfilePage(){
+  if(!currentUser) return;
+  const av = document.getElementById('profileAvatar');
+  if(currentUser.photo){ av.textContent=''; av.style.background = `center/cover no-repeat url(${currentUser.photo})`; }
+  else { av.textContent = currentUser.username[0].toUpperCase(); av.style.background = avatarColor(currentUser.username); }
+  document.getElementById('profileUsername').textContent = currentUser.username;
+  document.getElementById('profileEmail').textContent = currentUser.email;
+  document.getElementById('profile-card-public').classList.toggle('active', currentUser.privacy==='public');
+  document.getElementById('profile-card-private').classList.toggle('active', currentUser.privacy==='private');
+}
+function setProfilePrivacy(mode){
+  if(!currentUser) return;
+  if(currentUser.privacy===mode){ renderProfilePage(); return; }
+  currentUser.privacy = mode;
+  db.collection('users').doc(currentUser.uid).set({privacy:mode}, {merge:true});
+  renderProfilePage();
+  startInboxListener();
+  showToast('Profile set to ' + mode);
+}
+function onProfilePhotoChosen(input){
+  const file = input.files && input.files[0];
+  if(!file || !currentUser) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const img = new Image();
+    img.onload = function(){
+      const maxDim = 240;
+      let w = img.width, h = img.height;
+      if(w>h){ if(w>maxDim){ h = Math.round(h*maxDim/w); w = maxDim; } }
+      else { if(h>maxDim){ w = Math.round(w*maxDim/h); h = maxDim; } }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.72);
+      currentUser.photo = dataUrl;
+      db.collection('users').doc(currentUser.uid).set({photo:dataUrl}, {merge:true}).then(()=>{
+        renderProfilePage(); updateAvatarMe(); showToast('Profile photo updated');
+      }).catch(err=> showToast('Could not save photo: '+err.message));
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+/* ---------------- chats / thread / requests (real Firestore) ---------------- */
+function escapeHtml(s){ return s.replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m])); }
+function avatarColor(seed){
+  const palette = ["linear-gradient(135deg,#6C63FF,#8F7AFF)","linear-gradient(135deg,#2FBF9F,#5DE0C0)","linear-gradient(135deg,#FF7A59,#FFC65C)","linear-gradient(135deg,#E85D9C,#FF8FBE)","linear-gradient(135deg,#8A7C93,#5C4C64)"];
+  let h = 0; for(let i=0;i<seed.length;i++) h = (h*31 + seed.charCodeAt(i)) % palette.length;
+  return palette[Math.abs(h)];
+}
+function nowTime(){ return new Date().toLocaleTimeString([], {hour:'numeric', minute:'2-digit'}); }
+function threadIdFor(a,b){ return [a,b].sort().join('_'); }
+
+function startChatsListener(){
+  if(chatsUnsub) chatsUnsub();
+  if(!currentUser) return;
+  chatsUnsub = db.collection('users').doc(currentUser.uid).collection('contacts')
+    .onSnapshot(snap=>{
+      allContactsRaw = [];
+      snap.forEach(d=> allContactsRaw.push({uid:d.id, ...d.data()}));
+      renderChatsList(allContactsRaw);
+    });
+}
+function makeAvatarHtml(uid, username, photo, size){
+  size = size || 48;
+  const bg = photo ? `center/cover no-repeat url(${photo})` : avatarColor(username);
+  return `<div class="c-avatar" data-uid="${uid}" data-uname="${escapeHtml(username)}" onclick="event.stopPropagation(); viewPersonPhoto('${uid}','${escapeHtml(username)}')" style="width:${size}px; height:${size}px; background:${bg}; cursor:zoom-in;">${photo?'':escapeHtml(username[0].toUpperCase())}</div>`;
+}
+function renderChatsList(contacts){
+  const area = document.getElementById('chatsListArea');
+  const empty = document.getElementById('chatsEmptyState');
+  const archivedBar = document.getElementById('archivedBar');
+  const visible = (contacts||[]).filter(c=> !isBlockedEitherWay(c.uid));
+  const active = visible.filter(c=> !c.archived);
+  const archivedCount = visible.filter(c=> c.archived).length;
+
+  archivedBar.classList.toggle('hidden', archivedCount===0);
+  document.getElementById('archivedCount').textContent = archivedCount;
+
+  if(active.length===0){
+    area.classList.add('hidden'); area.innerHTML=''; empty.classList.remove('hidden'); return;
+  }
+  empty.classList.add('hidden'); area.classList.remove('hidden');
+  active.sort((a,b)=> (b.pinned?1:0) - (a.pinned?1:0));
+
+  Promise.all(active.map(c => db.collection('users').doc(c.uid).get().then(doc=> ({...c, photo: doc.exists ? doc.data().photo : null})))).then(withPhotos=>{
+    area.innerHTML = withPhotos.map(c=>`
+      <div class="c-row" data-uid="${c.uid}" data-uname="${escapeHtml(c.username)}" id="chatrow-${c.uid}">
+        <div class="c-avatar-wrap">${makeAvatarHtml(c.uid, c.username, c.photo)}</div>
+        <div class="c-mid">
+          <div class="c-row-top"><span class="c-name">${c.pinned?'<span class="pin-mark">📌</span>':''}${escapeHtml(c.username)}</span></div>
+          <div class="c-preview">Tap to open chat • hold for options</div>
+        </div>
+      </div>`).join('');
+    withPhotos.forEach(c=>{
+      const row = document.getElementById('chatrow-'+c.uid);
+      if(row) bindPress(row, ()=>openChatActionModal(c.uid, c.username), ()=>openThread(c.uid, c.username));
+    });
+  });
+}
+
+/* ---------------- chat row context menu: pin / archive / block / delete ---------------- */
+function openChatActionModal(uid, username){
+  activeChatCtx = { uid, username };
+  const c = allContactsRaw.find(x=>x.uid===uid) || {};
+  document.getElementById('chatActionAvatar').style.background = avatarColor(username);
+  document.getElementById('chatActionAvatar').textContent = username[0].toUpperCase();
+  document.getElementById('chatActionName').textContent = username;
+  document.getElementById('chatActionPinLabel').textContent = c.pinned ? 'Unpin Chat' : 'Pin Chat';
+  document.getElementById('chatActionArchiveLabel').textContent = c.archived ? 'Unarchive Chat' : 'Archive Chat';
+  document.getElementById('chatActionModal').classList.remove('hidden');
+}
+function closeChatActionModal(){ document.getElementById('chatActionModal').classList.add('hidden'); }
+function toggleChatPin(){
+  if(!activeChatCtx || !currentUser) return;
+  const c = allContactsRaw.find(x=>x.uid===activeChatCtx.uid) || {};
+  db.collection('users').doc(currentUser.uid).collection('contacts').doc(activeChatCtx.uid)
+    .set({pinned: !c.pinned}, {merge:true});
+  closeChatActionModal();
+}
+function toggleChatArchive(){
+  if(!activeChatCtx || !currentUser) return;
+  const c = allContactsRaw.find(x=>x.uid===activeChatCtx.uid) || {};
+  db.collection('users').doc(currentUser.uid).collection('contacts').doc(activeChatCtx.uid)
+    .set({archived: !c.archived}, {merge:true});
+  closeChatActionModal();
+  showToast(c.archived ? 'Chat unarchived' : 'Chat archived');
+}
+function confirmDeleteChat(){
+  if(!activeChatCtx) return;
+  document.getElementById('deleteChatConfirmText').textContent = `Delete your chat with "${activeChatCtx.username}"? If their account is private, you'll need to send a new request to chat again.`;
+  document.getElementById('deleteChatConfirmYesBtn').onclick = deleteActiveChat;
+  closeChatActionModal();
+  document.getElementById('deleteChatConfirmModal').classList.remove('hidden');
+}
+function deleteActiveChat(){
+  document.getElementById('deleteChatConfirmModal').classList.add('hidden');
+  if(!activeChatCtx || !currentUser) return;
+  db.collection('users').doc(currentUser.uid).collection('contacts').doc(activeChatCtx.uid).delete()
+    .then(()=> showToast('Chat deleted'));
+}
+function confirmBlockUser(){
+  if(!activeChatCtx) return;
+  document.getElementById('blockConfirmText').textContent = `Block "${activeChatCtx.username}"? Neither of you will be able to find or message each other anymore.`;
+  document.getElementById('blockConfirmYesBtn').onclick = blockActiveUser;
+  closeChatActionModal();
+  document.getElementById('blockConfirmModal').classList.remove('hidden');
+}
+function blockActiveUser(){
+  document.getElementById('blockConfirmModal').classList.add('hidden');
+  if(!activeChatCtx || !currentUser) return;
+  const {uid, username} = activeChatCtx;
+  const meUid = currentUser.uid;
+  const batch = db.batch();
+  batch.set(db.collection('users').doc(meUid).collection('blocked').doc(uid), {username, createdAt: firebase.firestore.FieldValue.serverTimestamp()});
+  batch.set(db.collection('users').doc(uid).collection('blockedBy').doc(meUid), {createdAt: firebase.firestore.FieldValue.serverTimestamp()});
+  batch.delete(db.collection('users').doc(meUid).collection('contacts').doc(uid));
+  batch.delete(db.collection('users').doc(uid).collection('contacts').doc(meUid));
+  batch.commit().then(()=>{
+    blockedSet.add(uid);
+    renderChatsList(allContactsRaw);
+    showToast(username + ' has been blocked');
+  });
+}
+
+/* ---------------- archived chats ---------------- */
+function openArchivedPage(){ renderArchivedList(); showScreen('screen-archived'); }
+function renderArchivedList(){
+  const area = document.getElementById('archivedListArea');
+  const archived = allContactsRaw.filter(c=> c.archived && !isBlockedEitherWay(c.uid));
+  if(archived.length===0){
+    area.innerHTML = `<div class="empty-state" style="padding-top:40px;"><div class="es-icon">📦</div><p class="es-title">No archived chats</p></div>`;
+    return;
+  }
+  area.innerHTML = archived.map(c=>`
+    <div class="c-row" data-uid="${c.uid}" id="archrow-${c.uid}">
+      <div class="c-avatar-wrap">${makeAvatarHtml(c.uid, c.username, null)}</div>
+      <div class="c-mid"><div class="c-row-top"><span class="c-name">${escapeHtml(c.username)}</span></div><div class="c-preview">Hold to unarchive</div></div>
+    </div>`).join('');
+  archived.forEach(c=>{
+    const row = document.getElementById('archrow-'+c.uid);
+    if(row) bindPress(row, ()=>{ db.collection('users').doc(currentUser.uid).collection('contacts').doc(c.uid).set({archived:false},{merge:true}); showToast('Chat unarchived'); }, ()=>openThread(c.uid, c.username));
+  });
+}
+
+/* ---------------- blocked accounts ---------------- */
+function openBlockedPage(){ renderBlockedList(); showScreen('screen-blocked'); }
+function renderBlockedList(){
+  const area = document.getElementById('blockedListArea');
+  area.innerHTML = `<p class="search-empty">Loading…</p>`;
+  db.collection('users').doc(currentUser.uid).collection('blocked').get().then(snap=>{
+    if(snap.empty){
+      area.innerHTML = `<div class="empty-state" style="padding-top:40px;"><div class="es-icon">🚫</div><p class="es-title">No blocked accounts</p></div>`;
+      return;
+    }
+    area.innerHTML = snap.docs.map(d=>{
+      const r = d.data();
+      return `<div class="req-block">
+        <div class="req-row">
+          <div class="c-avatar" style="background:${avatarColor(r.username)}; width:44px; height:44px;">${escapeHtml(r.username[0].toUpperCase())}</div>
+          <div class="req-mid"><div class="req-name">${escapeHtml(r.username)}</div></div>
+        </div>
+        <div class="req-actions"><button class="req-decline" style="flex:none; padding:8px 18px;" onclick="unblockUser('${d.id}','${escapeHtml(r.username)}')">Unblock</button></div>
+      </div>`;
+    }).join('');
+  });
+}
+function unblockUser(uid, username){
+  if(!currentUser) return;
+  const meUid = currentUser.uid;
+  const batch = db.batch();
+  batch.delete(db.collection('users').doc(meUid).collection('blocked').doc(uid));
+  batch.delete(db.collection('users').doc(uid).collection('blockedBy').doc(meUid));
+  batch.commit().then(()=>{
+    blockedSet.delete(uid);
+    renderBlockedList();
+    showToast(username + ' unblocked');
+  });
+}
+
+/* ---------------- HD photo viewer (any person) ---------------- */
+function viewPersonPhoto(uid, username){
+  const box = document.getElementById('photoViewBox');
+  box.innerHTML = `<p style="text-align:center; color:#8c7a95; font-size:12px;">Loading…</p>`;
+  document.getElementById('photoViewModal').classList.remove('hidden');
+  db.collection('users').doc(uid).get().then(doc=>{
+    const photo = doc.exists ? doc.data().photo : null;
+    if(photo){
+      box.innerHTML = `<img src="${photo}" style="width:100%; aspect-ratio:1/1; object-fit:cover; border-radius:20px; border:1.5px solid #3E2B4B; display:block;">`;
+    } else {
+      const bg = avatarColor(username);
+      box.innerHTML = `<div style="width:100%; aspect-ratio:1/1; border-radius:20px; background:${bg}; display:flex; align-items:center; justify-content:center; font-size:88px; font-weight:800; color:#fff;">${escapeHtml(username[0].toUpperCase())}</div>
+        <p style="text-align:center; color:#8c7a95; font-size:12px; margin-top:10px;">${escapeHtml(username)} hasn't set a photo yet</p>`;
+    }
+  });
+}
+
+function openThread(uid, username){
+  currentThread = { uid, username };
+  exitSelectionMode();
+  cancelReply();
+  document.getElementById('threadUsername').textContent = username;
+  const tAvatar = document.getElementById('threadAvatar');
+  tAvatar.textContent = username[0].toUpperCase();
+  tAvatar.style.background = avatarColor(username);
+  document.getElementById('threadSubtitle').textContent = '';
+  db.collection('users').doc(uid).get().then(doc=>{
+    if(doc.exists){
+      const d = doc.data();
+      document.getElementById('threadSubtitle').textContent = d.privacy==='private' ? '🔒 Private account' : '🌐 Public account';
+    }
+  });
+  showScreen('screen-thread');
+  listenToThreadMessages();
+}
+function closeThread(){
+  exitSelectionMode();
+  cancelReply();
+  editingMessageId = null;
+  const input = document.getElementById('threadInput');
+  if(input) input.value = '';
+  showScreen('screen-chats');
+}
+function listenToThreadMessages(){
+  if(messagesUnsub){ messagesUnsub(); messagesUnsub=null; }
+  if(!currentUser || !currentThread) return;
+  const tid = threadIdFor(currentUser.uid, currentThread.uid);
+  const box = document.getElementById('threadMessages');
+  box.innerHTML = `<p class="thread-demo-note">Loading…</p>`;
+  messagesUnsub = db.collection('chats').doc(tid).collection('messages').orderBy('createdAt','asc')
+    .onSnapshot(snap=>{
+      threadMsgMap = {};
+      const visibleDocs = snap.docs.filter(d=>{
+        const m = d.data();
+        return !(Array.isArray(m.deletedFor) && m.deletedFor.includes(currentUser.uid));
+      });
+      if(visibleDocs.length===0){
+        box.innerHTML = `<p class="thread-demo-note">Say hi to ${escapeHtml(currentThread.username)} — this is a real message, it'll reach their phone.</p>`;
+        return;
+      }
+      box.innerHTML = visibleDocs.map(d=>{
+        const m = d.data();
+        threadMsgMap[d.id] = { ...m, id: d.id, mine: m.senderUid === currentUser.uid };
+        const mine = m.senderUid === currentUser.uid;
+        const t = (m.createdAt && m.createdAt.toDate) ? m.createdAt.toDate().toLocaleTimeString([], {hour:'numeric', minute:'2-digit'}) : '';
+        if(m.deleted){
+          return `<div class="msg-row ${mine?'mine':''} selectable" data-id="${d.id}"><div class="msg-bubble msg-deleted">🚫 This message was deleted</div><span class="msg-time">${t}</span></div>`;
+        }
+        const quote = m.replyTo ? `<div class="msg-quote"><span class="mq-name">${escapeHtml(m.replyTo.senderUsername)}</span>${escapeHtml(m.replyTo.text)}</div>` : '';
+        const editedTag = m.edited ? ' <span class="msg-edited-tag">(edited)</span>' : '';
+        const selected = selectedMsgIds.has(d.id) ? ' selected' : '';
+        return `<div class="msg-row ${mine?'mine':''} selectable${selected}" data-id="${d.id}"><div class="msg-bubble">${quote}${escapeHtml(m.text)}</div><span class="msg-time">${t}${editedTag}</span></div>`;
+      }).join('');
+      box.scrollTo({top: box.scrollHeight, behavior:'smooth'});
+      wireMessageRows();
+    }, err=>{ box.innerHTML = `<p class="thread-demo-note">Could not load messages: ${escapeHtml(err.message)}</p>`; });
+}
+function wireMessageRows(){
+  document.querySelectorAll('#threadMessages .msg-row[data-id]').forEach(row=>{
+    const id = row.getAttribute('data-id');
+    bindPress(row,
+      ()=>{ if(!selectionMode) enterSelectionMode(id); else toggleSelectMessage(id); },
+      ()=>{ if(selectionMode) toggleSelectMessage(id); }
+    );
+  });
+}
+
+/* ---------------- selection mode (long-press messages) ---------------- */
+function enterSelectionMode(id){
+  selectionMode = true;
+  selectedMsgIds = new Set([id]);
+  updateSelectionUI();
+}
+function toggleSelectMessage(id){
+  if(selectedMsgIds.has(id)) selectedMsgIds.delete(id); else selectedMsgIds.add(id);
+  if(selectedMsgIds.size===0){ exitSelectionMode(); return; }
+  updateSelectionUI();
+}
+function exitSelectionMode(){
+  selectionMode = false;
+  selectedMsgIds = new Set();
+  updateSelectionUI();
+}
+function updateSelectionUI(){
+  const selBar = document.getElementById('threadSelBar');
+  const selBottom = document.getElementById('threadSelBottomBar');
+  const inputRow = document.getElementById('threadInputRow');
+  const replyBar = document.getElementById('replyPreviewBar');
+  if(!selBar) return;
+  selBar.classList.toggle('active', selectionMode);
+  selBottom.classList.toggle('active', selectionMode);
+  inputRow.classList.toggle('hidden', selectionMode);
+  if(selectionMode) replyBar.classList.add('hidden');
+
+  const count = selectedMsgIds.size;
+  document.getElementById('selCount').textContent = count + ' Selected';
+
+  const idsArr = [...selectedMsgIds];
+  const single = count===1 ? threadMsgMap[idsArr[0]] : null;
+  const allMine = idsArr.length>0 && idsArr.every(id=> threadMsgMap[id] && threadMsgMap[id].mine);
+  const anyDeleted = idsArr.some(id=> threadMsgMap[id] && threadMsgMap[id].deleted);
+
+  document.getElementById('selEditBtn').classList.toggle('hidden', !(single && single.mine && !single.deleted));
+  document.getElementById('selCopyBtn').classList.toggle('hidden', !(single && !single.deleted));
+  document.getElementById('selDeleteBtn').classList.toggle('hidden', count===0);
+  document.getElementById('selForwardBtn').classList.toggle('hidden', anyDeleted || count===0);
+  document.getElementById('selReplyBtn').disabled = !(single && !single.deleted);
+
+  document.querySelectorAll('#threadMessages .msg-row[data-id]').forEach(row=>{
+    row.classList.toggle('selected', selectedMsgIds.has(row.getAttribute('data-id')));
+  });
+}
+function sendThreadMessage(){
+  const input = document.getElementById('threadInput');
+  const val = input.value.trim();
+  if(!val || !currentThread || !currentUser) return;
+  const meUid = currentUser.uid, themUid = currentThread.uid;
+  const tid = threadIdFor(meUid, themUid);
+
+  // Editing an existing message — update it instead of sending a new one
+  if(editingMessageId){
+    const editId = editingMessageId;
+    input.value = '';
+    editingMessageId = null;
+    db.collection('chats').doc(tid).collection('messages').doc(editId).update({
+      text: val, edited: true, editedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).catch(err=> showToast('Could not save edit: '+err.message));
+    return;
+  }
+
+  input.value = '';
+  const payload = {
+    text: val, senderUid: meUid, senderUsername: currentUser.username,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+  if(replyingTo){
+    payload.replyTo = { id: replyingTo.id, text: replyingTo.text, senderUsername: replyingTo.senderUsername };
+    cancelReply();
+  }
+
+  // Fire the message immediately — Firestore's local cache renders it instantly via the live listener
+  db.collection('chats').doc(tid).collection('messages').add(payload)
+    .catch(err=> showToast('Could not send: '+err.message));
+
+  // Contact bookkeeping happens in the background, without delaying the send
+  const meContactRef = db.collection('users').doc(meUid).collection('contacts').doc(themUid);
+  meContactRef.get().then(meContactSnap=>{
+    const alreadyContact = meContactSnap.exists;
+    const jobs = [];
+    if(!alreadyContact){
+      const themRef = db.collection('users').doc(themUid);
+      jobs.push(meContactRef.set({username: currentThread.username, updatedAt: firebase.firestore.FieldValue.serverTimestamp()}, {merge:true}));
+      jobs.push(themRef.collection('contacts').doc(meUid).set({username: currentUser.username, updatedAt: firebase.firestore.FieldValue.serverTimestamp()}, {merge:true}));
+      jobs.push(themRef.collection('newContacts').doc(meUid).set({fromUsername: currentUser.username, createdAt: firebase.firestore.FieldValue.serverTimestamp()}, {merge:true}));
+    } else {
+      jobs.push(meContactRef.set({updatedAt: firebase.firestore.FieldValue.serverTimestamp()}, {merge:true}));
+    }
+    return Promise.all(jobs);
+  }).catch(()=>{});
+}
+
+/* ---------------- reply ---------------- */
+function startReplyFromSelection(){
+  const idsArr = [...selectedMsgIds];
+  if(idsArr.length!==1) return;
+  const m = threadMsgMap[idsArr[0]];
+  if(!m || m.deleted) return;
+  replyingTo = { id: m.id, text: m.text, senderUsername: m.mine ? currentUser.username : m.senderUsername };
+  document.getElementById('replyPreviewName').textContent = m.mine ? 'You' : m.senderUsername;
+  document.getElementById('replyPreviewText').textContent = m.text;
+  document.getElementById('replyPreviewBar').classList.remove('hidden');
+  exitSelectionMode();
+  document.getElementById('threadInput').focus();
+}
+function cancelReply(){
+  replyingTo = null;
+  const bar = document.getElementById('replyPreviewBar');
+  if(bar) bar.classList.add('hidden');
+}
+
+/* ---------------- edit ---------------- */
+function startEditFromSelection(){
+  const idsArr = [...selectedMsgIds];
+  if(idsArr.length!==1) return;
+  const m = threadMsgMap[idsArr[0]];
+  if(!m || !m.mine || m.deleted) return;
+  editingMessageId = m.id;
+  cancelReply();
+  const input = document.getElementById('threadInput');
+  input.value = m.text;
+  input.focus();
+  exitSelectionMode();
+  showToast('Editing message — send to save changes');
+}
+
+/* ---------------- copy ---------------- */
+function copyFromSelection(){
+  const idsArr = [...selectedMsgIds];
+  if(idsArr.length!==1) return;
+  const m = threadMsgMap[idsArr[0]];
+  if(!m || m.deleted) return;
+  const text = m.text;
+  const done = ()=>{ showToast('Copied'); exitSelectionMode(); };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done).catch(()=>{ fallbackCopy(text); done(); });
+  } else {
+    fallbackCopy(text); done();
+  }
+}
+function fallbackCopy(text){
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); }catch(e){}
+  document.body.removeChild(ta);
+}
+
+/* ---------------- delete ---------------- */
+function deleteFromSelection(){
+  const idsArr = [...selectedMsgIds];
+  if(idsArr.length===0) return;
+  const allMine = idsArr.every(id=> threadMsgMap[id] && threadMsgMap[id].mine);
+  document.getElementById('deleteForEveryoneBtn').classList.toggle('hidden', !allMine);
+  document.getElementById('deleteMessageModal').classList.remove('hidden');
+}
+function closeDeleteMessageModal(){
+  document.getElementById('deleteMessageModal').classList.add('hidden');
+}
+function deleteActiveMessage(forEveryone){
+  closeDeleteMessageModal();
+  if(!currentUser || !currentThread) return;
+  const idsArr = [...selectedMsgIds];
+  if(idsArr.length===0) return;
+  const tid = threadIdFor(currentUser.uid, currentThread.uid);
+  const batch = db.batch();
+  idsArr.forEach(id=>{
+    const ref = db.collection('chats').doc(tid).collection('messages').doc(id);
+    if(forEveryone){
+      batch.update(ref, { deleted:true, text:'', deletedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    } else {
+      batch.update(ref, { deletedFor: firebase.firestore.FieldValue.arrayUnion(currentUser.uid) });
+    }
+  });
+  batch.commit().then(()=> showToast(forEveryone ? 'Deleted for everyone' : 'Deleted for you'))
+    .catch(err=> showToast('Could not delete: '+err.message));
+  exitSelectionMode();
+}
+
+/* ---------------- forward ---------------- */
+function openForwardModal(){
+  if(selectedMsgIds.size===0) return;
+  document.getElementById('forwardSearchInput').value = '';
+  renderForwardList();
+  document.getElementById('forwardModal').classList.remove('hidden');
+}
+function closeForwardModal(){
+  document.getElementById('forwardModal').classList.add('hidden');
+}
+function renderForwardList(){
+  const area = document.getElementById('forwardListArea');
+  const term = (document.getElementById('forwardSearchInput').value || '').trim().toLowerCase();
+  const list = allContactsRaw.filter(c=> !isBlockedEitherWay(c.uid) && (!term || c.username.toLowerCase().includes(term)));
+  if(list.length===0){
+    area.innerHTML = `<p class="fwd-empty">No chats found</p>`;
+    return;
+  }
+  area.innerHTML = list.map(c=>`
+    <button class="fwd-row" id="fwdrow-${c.uid}">
+      <div class="c-avatar" style="width:38px; height:38px; font-size:13.5px; background:${avatarColor(c.username)};">${escapeHtml(c.username[0].toUpperCase())}</div>
+      <span style="font-size:14px; font-weight:700; color:#fff;">${escapeHtml(c.username)}</span>
+    </button>`).join('');
+  list.forEach(c=>{
+    const row = document.getElementById('fwdrow-'+c.uid);
+    if(row) row.onclick = ()=> forwardSelectedTo(c.uid, c.username);
+  });
+}
+function forwardSelectedTo(toUid, toUsername){
+  if(!currentUser) return;
+  const idsArr = [...selectedMsgIds].filter(id=> threadMsgMap[id] && !threadMsgMap[id].deleted);
+  if(idsArr.length===0) return;
+  const tid = threadIdFor(currentUser.uid, toUid);
+  const batch = db.batch();
+  idsArr.forEach(id=>{
+    const m = threadMsgMap[id];
+    const ref = db.collection('chats').doc(tid).collection('messages').doc();
+    batch.set(ref, {
+      text: m.text, senderUid: currentUser.uid, senderUsername: currentUser.username,
+      forwarded: true, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  });
+  batch.commit().then(()=>{
+    closeForwardModal();
+    exitSelectionMode();
+    showToast('Forwarded to ' + toUsername);
+  }).catch(err=> showToast('Could not forward: '+err.message));
+}
+
+function startInboxListener(){
+  if(inboxUnsub) inboxUnsub();
+  if(!currentUser) return;
+  const badge = document.getElementById('reqBadge');
+  if(currentUser.privacy === 'private'){
+    inboxUnsub = db.collection('users').doc(currentUser.uid).collection('requests')
+      .onSnapshot(snap=>{
+        latestReceivedRequests = [];
+        snap.forEach(d=> latestReceivedRequests.push({uid:d.id, ...d.data()}));
+        badge.textContent = latestReceivedRequests.length;
+        badge.classList.toggle('hidden', latestReceivedRequests.length===0);
+        const reqScreen = document.getElementById('screen-requests');
+        const listArea = document.getElementById('requestsListArea');
+        if(!reqScreen.classList.contains('hidden') && !listArea.classList.contains('hidden')) renderReceivedRequests();
+      });
+  } else {
+    inboxUnsub = db.collection('users').doc(currentUser.uid).collection('newContacts')
+      .onSnapshot(snap=>{
+        badge.textContent = snap.size;
+        badge.classList.toggle('hidden', snap.size===0);
+      });
+  }
+}
+function openRequestsPage(){
+  if(!currentUser) return;
+  const isPrivate = currentUser.privacy === 'private';
+  document.getElementById('requestsTabs').classList.toggle('hidden', !isPrivate);
+  document.getElementById('requestsTitle').textContent = isPrivate ? 'Requests' : 'New Messages';
+  if(isPrivate){
+    setRequestsTab('received');
+  } else {
+    document.getElementById('requestsListArea').classList.remove('hidden');
+    document.getElementById('sentRequestsListArea').classList.add('hidden');
+    renderNewContactsBox();
+  }
+  showScreen('screen-requests');
+}
+function closeRequestsPage(){
+  if(sentRequestsUnsub){ sentRequestsUnsub(); sentRequestsUnsub=null; }
+  showScreen('screen-chats');
+}
+function setRequestsTab(tab){
+  document.getElementById('reqTabReceived').classList.toggle('active', tab==='received');
+  document.getElementById('reqTabSent').classList.toggle('active', tab==='sent');
+  document.getElementById('requestsListArea').classList.toggle('hidden', tab!=='received');
+  document.getElementById('sentRequestsListArea').classList.toggle('hidden', tab!=='sent');
+  if(tab==='received'){
+    if(sentRequestsUnsub){ sentRequestsUnsub(); sentRequestsUnsub=null; }
+    renderReceivedRequests();
+  } else {
+    renderSentRequestsLive();
+  }
+}
+function renderReceivedRequests(){
+  const area = document.getElementById('requestsListArea');
+  const reqs = latestReceivedRequests;
+  if(reqs.length===0){
+    area.innerHTML = `<div class="empty-state" style="padding-top:40px;"><div class="es-icon">📭</div><p class="es-title">No requests right now</p><p class="es-sub">People who want to chat with you will show up here.</p></div>`;
+    return;
+  }
+  area.innerHTML = reqs.map(r=>`
+    <div class="req-block">
+      <div class="req-row">
+        <div class="c-avatar" style="background:${avatarColor(r.fromUsername)}; width:44px; height:44px;">${escapeHtml(r.fromUsername[0].toUpperCase())}</div>
+        <div class="req-mid"><div class="req-name">${escapeHtml(r.fromUsername)}</div><div class="req-msg">Wants to start a chat with you</div></div>
+      </div>
+      <div class="req-actions">
+        <button class="req-accept" onclick="acceptRequest('${r.uid}','${escapeHtml(r.fromUsername)}')">Accept</button>
+        <button class="req-decline" onclick="declineRequest('${r.uid}','${escapeHtml(r.fromUsername)}')">Decline</button>
+      </div>
+    </div>`).join('');
+}
+function renderSentRequestsLive(){
+  const area = document.getElementById('sentRequestsListArea');
+  area.innerHTML = `<p class="search-empty">Loading…</p>`;
+  if(sentRequestsUnsub) sentRequestsUnsub();
+  sentRequestsUnsub = db.collection('users').doc(currentUser.uid).collection('sentRequests')
+    .onSnapshot(snap=>{
+      if(snap.empty){
+        area.innerHTML = `<div class="empty-state" style="padding-top:40px;"><div class="es-icon">📤</div><p class="es-title">No sent requests</p><p class="es-sub">Requests you send to private accounts will show up here.</p></div>`;
+        return;
+      }
+      const rows = [];
+      snap.forEach(d=>{
+        const r = d.data();
+        const status = r.status==='accepted' ? '<span style="color:#3FD68C;">✅ Accepted — you can chat now</span>'
+          : r.status==='rejected' ? '<span style="color:#FF8A94;">❌ Declined</span>'
+          : '<span style="color:#8c7a95;">⏳ Waiting for response</span>';
+        rows.push(`<div class="req-block">
+          <div class="req-row">
+            <div class="c-avatar" style="background:${avatarColor(r.toUsername)}; width:44px; height:44px;">${escapeHtml(r.toUsername[0].toUpperCase())}</div>
+            <div class="req-mid"><div class="req-name">${escapeHtml(r.toUsername)}</div><div class="req-msg">${status}</div></div>
+          </div>
+        </div>`);
+      });
+      area.innerHTML = rows.join('');
+    }, err=>{ area.innerHTML = `<p class="search-empty">Could not load: ${escapeHtml(err.message)}</p>`; });
+}
+function renderNewContactsBox(){
+  const area = document.getElementById('requestsListArea');
+  area.innerHTML = `<p class="search-empty">Loading…</p>`;
+  db.collection('users').doc(currentUser.uid).collection('newContacts').get().then(snap=>{
+    if(snap.empty){
+      area.innerHTML = `<div class="empty-state" style="padding-top:40px;"><div class="es-icon">📭</div><p class="es-title">No new messages</p><p class="es-sub">First-time messages from new people will show up here.</p></div>`;
+      return;
+    }
+    const docs = []; snap.forEach(d=> docs.push({id:d.id, ...d.data()}));
+    area.innerHTML = docs.map(r=>`
+      <button class="c-row" onclick="openThread('${r.id}','${escapeHtml(r.fromUsername)}')">
+        <div class="c-avatar-wrap"><div class="c-avatar" style="background:${avatarColor(r.fromUsername)};">${escapeHtml(r.fromUsername[0].toUpperCase())}</div></div>
+        <div class="c-mid"><div class="c-row-top"><span class="c-name">${escapeHtml(r.fromUsername)}</span></div><div class="c-preview">New message</div></div>
+      </button>`).join('');
+    const batch = db.batch();
+    docs.forEach(r=> batch.delete(db.collection('users').doc(currentUser.uid).collection('newContacts').doc(r.id)));
+    batch.commit();
+  }).catch(err=>{ area.innerHTML = `<p class="search-empty">Could not load: ${escapeHtml(err.message)}</p>`; });
+}
+function acceptRequest(fromUid, fromUsername){
+  if(!currentUser) return;
+  const meRef = db.collection('users').doc(currentUser.uid);
+  const themRef = db.collection('users').doc(fromUid);
+  Promise.all([
+    meRef.collection('contacts').doc(fromUid).set({username:fromUsername, updatedAt: firebase.firestore.FieldValue.serverTimestamp()}, {merge:true}),
+    themRef.collection('contacts').doc(currentUser.uid).set({username:currentUser.username, updatedAt: firebase.firestore.FieldValue.serverTimestamp()}, {merge:true}),
+    meRef.collection('requests').doc(fromUid).delete(),
+    themRef.collection('sentRequests').doc(currentUser.uid).set({toUsername:currentUser.username, status:'accepted', updatedAt: firebase.firestore.FieldValue.serverTimestamp()}, {merge:true})
+  ]).then(()=> showToast(fromUsername + ' can now message you freely'));
+}
+function declineRequest(fromUid, fromUsername){
+  if(!currentUser) return;
+  const meRef = db.collection('users').doc(currentUser.uid);
+  const themRef = db.collection('users').doc(fromUid);
+  Promise.all([
+    meRef.collection('requests').doc(fromUid).delete(),
+    themRef.collection('sentRequests').doc(currentUser.uid).set({toUsername:currentUser.username, status:'rejected', updatedAt: firebase.firestore.FieldValue.serverTimestamp()}, {merge:true})
+  ]).then(()=> showToast('Declined'));
+}
+
+/* ---------------- init ---------------- */
+(function(){
+  ['stars-auth','stars-setup','stars-chats','stars-thread','stars-requests','stars-search','stars-profile','stars-accounts','stars-delete-verify','stars-delete-confirm','stars-archived','stars-blocked'].forEach(id=>{
+    const box = document.getElementById(id);
+    if(!box) return;
+    for(let i=0;i<40;i++){
+      const s = document.createElement('i');
+      s.style.left = Math.random()*100+'%';
+      s.style.top = Math.random()*100+'%';
+      s.style.animationDelay = (Math.random()*3)+'s';
+      box.appendChild(s);
+    }
+  });
+  renderChatsList([]);
+})();
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('./service-worker.js').catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>
